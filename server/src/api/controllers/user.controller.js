@@ -3,7 +3,7 @@ import { OrganizationUser } from "../models/organizationUser.model.js";
 
 const getUsers = async (req, res) => {
   const { organizationId, role } = req.query;
-  
+
   try {
     let users = [];
     if (organizationId) {
@@ -23,6 +23,7 @@ const getUsers = async (req, res) => {
   }
 };
 
+
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { firstName, lastName, email } = req.body;
@@ -32,8 +33,8 @@ const updateUser = async (req, res) => {
       id,
       { firstName, lastName, email },
       { new: true }
-    ).select('-password');
-    
+    ).select("-password");
+
     if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user);
   } catch (error) {
@@ -45,19 +46,20 @@ const getUserProfile = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const user = await User.findById(id).select('-password');
+    const user = await User.findById(id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const organizations = await OrganizationUser.find({ userId: id })
-      .populate('organizationId');
+    const organizations = await OrganizationUser.find({ userId: id }).populate(
+      "organizationId"
+    );
 
     res.status(200).json({
       user,
-      organizations: organizations.map(org => ({
+      organizations: organizations.map((org) => ({
         organization: org.organizationId,
         role: org.role,
-        status: org.status
-      }))
+        status: org.status,
+      })),
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user profile", error });

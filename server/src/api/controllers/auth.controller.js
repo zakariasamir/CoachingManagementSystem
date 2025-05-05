@@ -4,9 +4,17 @@ import { hash, compare } from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
-  const { firstName, lastName, email, role, password, organizationId } = req.body;
+  const { firstName, lastName, email, role, password, organizationId } =
+    req.body;
 
-  if (!firstName || !lastName || !email || !role || !password || !organizationId) {
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !role ||
+    !password ||
+    !organizationId
+  ) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
@@ -23,7 +31,8 @@ const register = async (req, res) => {
       firstName,
       lastName,
       email,
-      password: hashedPassword
+      role,
+      password: hashedPassword,
     });
     await newUser.save();
 
@@ -32,7 +41,7 @@ const register = async (req, res) => {
       userId: newUser._id,
       organizationId,
       role,
-      status: 'active'
+      status: "active",
     });
     await organizationUser.save();
 
@@ -44,7 +53,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  
+
   if (!email || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -61,20 +70,21 @@ const login = async (req, res) => {
     }
 
     // Get user's organization roles
-    const orgRoles = await OrganizationUser.find({ 
+    const orgRoles = await OrganizationUser.find({
       userId: user._id,
-      status: 'active'
-    }).populate('organizationId', 'name');
+      status: "active",
+    }).populate("organizationId", "name");
 
     const token = jwt.sign(
-      { 
-        id: user._id, 
+      {
+        id: user._id,
         email: user.email,
-        organizations: orgRoles.map(or => ({
+        role: user.role,
+        organizations: orgRoles.map((or) => ({
           id: or.organizationId._id,
           name: or.organizationId.name,
-          role: or.role
-        }))
+          // role: or.role,
+        })),
       },
       process.env.JWT_SECRET,
       {
@@ -88,19 +98,19 @@ const login = async (req, res) => {
       sameSite: "strict",
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Login successful",
       user: {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        organizations: orgRoles.map(or => ({
+        organizations: orgRoles.map((or) => ({
           id: or.organizationId._id,
           name: or.organizationId.name,
-          role: or.role
-        }))
-      }
+          role: or.role,
+        })),
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Error during login", error });

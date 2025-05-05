@@ -5,15 +5,15 @@ import {
   getOrganizationById,
   deleteOrganization,
 } from "../controllers/organization.controller.js";
-import { authenticate } from "../middleware/auth.middleware.js";
-import { authorize } from "../middleware/authorization.middleware.js";
+import authenticate from "../middlewares/auth.middleware.js";
+import authorize from "../middlewares/role.middleware.js";
 
 const auth = [authenticate, authorize(["admin", "manager"])];
 
 const router = Router();
 
-router.post("/", auth, createOrganization);
-router.get("/", auth, getOrganizations);
+router.post("/", createOrganization);
+router.get("/", getOrganizations);
 router.get("/:id", auth, getOrganizationById);
 router.delete("/:id", auth, deleteOrganization);
 

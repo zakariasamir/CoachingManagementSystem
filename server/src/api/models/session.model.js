@@ -1,3 +1,5 @@
+import { Schema, model } from 'mongoose';
+
 const sessionSchema = new Schema({
   startTime: { type: Date, required: true },
   endTime: { type: Date, required: true },

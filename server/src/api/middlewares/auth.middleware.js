@@ -10,7 +10,6 @@ const authenticate = (req, res, next) => {
     });
   }
   const token = req.cookies.token;
-  console.log("Token from cookies:", token);
 
   if (!token) {
     console.log("No token found in cookies");
@@ -22,6 +21,7 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = verify(token, JWT_SECRET);
+    console.log("Decoded token:", decoded);
 
     if (decoded.exp * 1000 < Date.now()) {
       return res.status(401).json({

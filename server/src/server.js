@@ -5,6 +5,8 @@ import cors from "cors";
 import connectDB from "../src/config/db.js";
 import authRoutes from "./api/routes/auth.route.js";
 import organizatioRoutes from "./api/routes/organization.route.js";
+import userRoutes from "./api/routes/user.route.js";
+import sessionRoutes from "./api/routes/session.route.js";
 import cookieParser from "cookie-parser";
 
 config();
@@ -16,7 +18,7 @@ connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/organization", organizatioRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/session", sessionRoutes);
 
 app.use((req, res) => {
