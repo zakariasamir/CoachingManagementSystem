@@ -1,16 +1,24 @@
 // src/components/Sidebar.tsx
 import { Link, useLocation } from "react-router-dom";
-import { Home, Calendar, Flag, CreditCard, Sun, Moon } from "lucide-react";
-import { useState } from "react";
+import { Home, Calendar, Flag, CreditCard, Sun, Moon, X } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
+import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
+  const { data } = useAuth();
   const location = useLocation();
-  const [role, setRole] = useState<"manager" | "coach" | "entrepreneur">(
-    "manager"
-  );
-  const [darkMode, setDarkMode] = useState(false);
+  const role = data.user.role;
+  const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setIsOpen((prev) => !prev);
+    document.addEventListener("toggle-sidebar", handler);
+    return () => document.removeEventListener("toggle-sidebar", handler);
+  }, []);
 
   const menuItems = [
     {
@@ -40,57 +48,62 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="h-screen border-r w-64 flex flex-col justify-between bg-background">
-      <div>
-        <div className="p-4 border-b">
-          <select
-            className="w-full p-2 rounded-md border"
-            value={role}
-            onChange={(e) => setRole(e.target.value as any)}
-          >
-            <option value="manager">Manager</option>
-            <option value="coach">Coach</option>
-            <option value="entrepreneur">Entrepreneur</option>
-          </select>
+    <div
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0",
+        !isOpen && "-translate-x-full"
+      )}
+    >
+      <div className="h-full border-r flex flex-col justify-between bg-background">
+        <div>
+          <div className="p-4 border-b flex justify-between items-center lg:hidden">
+            <span className="font-semibold">Menu</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <nav className="mt-4 flex flex-col gap-1 px-2">
+            {menuItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={() => setIsOpen(false)}
+              >
+                <Button
+                  variant={
+                    location.pathname === item.path ? "secondary" : "ghost"
+                  }
+                  className="w-full justify-start gap-2"
+                >
+                  {item.icon}
+                  <span className="truncate">{item.name}</span>
+                </Button>
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <nav className="mt-4 flex flex-col gap-1 px-2">
-          {menuItems.map((item) => (
-            <Link key={item.name} to={item.path}>
-              <Button
-                variant={
-                  location.pathname === item.path ? "secondary" : "ghost"
-                }
-                className="w-full justify-start gap-2"
-              >
-                {item.icon}
-                {item.name}
-              </Button>
-            </Link>
-          ))}
-        </nav>
+        <div className="p-4 border-t flex justify-between items-center">
+          <span className="text-sm">Theme</span>
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {theme === "light" ? (
+              <Moon className="h-5 w-5" />
+            ) : (
+              <Sun className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
       </div>
-
-      <div className="p-4 border-t flex justify-between items-center">
-        <span className="text-sm">Theme</span>
-        <Toggle
-          pressed={darkMode}
-          onPressedChange={() => {
-            setDarkMode(!darkMode);
-            if (darkMode) {
-              document.documentElement.classList.remove("dark");
-            } else {
-              document.documentElement.classList.add("dark");
-            }
-          }}
-        >
-          {darkMode ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
-          )}
-        </Toggle>
-      </div>
+      {/* {isOpen && (
+        <div
+          className="fixed inset-0 z-10 bg-black/50 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )} */}
     </div>
   );
 };

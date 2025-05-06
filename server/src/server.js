@@ -7,10 +7,17 @@ import authRoutes from "./api/routes/auth.route.js";
 import organizatioRoutes from "./api/routes/organization.route.js";
 import userRoutes from "./api/routes/user.route.js";
 import sessionRoutes from "./api/routes/session.route.js";
+import statsRoutes from "./api/routes/stats.route.js";
 import cookieParser from "cookie-parser";
 
+const corsOptions = {
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
+
 config();
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -20,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/organization", organizatioRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/session", sessionRoutes);
+app.use("/api/stats", statsRoutes);
 
 app.use((req, res) => {
   res.status(404).send("Route not found");

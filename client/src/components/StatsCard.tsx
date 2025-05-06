@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, CalendarCheck, Target } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
   title: string;
@@ -8,27 +9,43 @@ interface StatsCardProps {
 }
 
 export function StatsCard({ title, value, icon }: StatsCardProps) {
+  const getCardStyles = () => {
+    switch (icon) {
+      case "sessions":
+        return "from-blue-600 to-blue-700";
+      case "goals":
+        return "from-green-600 to-green-700";
+      case "payments":
+        return "from-purple-600 to-purple-700";
+      default:
+        return "from-blue-600 to-blue-700";
+    }
+  };
+
   const renderIcon = () => {
     switch (icon) {
       case "sessions":
-        return <CalendarCheck className="h-10 w-10 text-primary" />;
+        return <CalendarCheck className="h-10 w-10 text-blue-100" />;
       case "goals":
-        return <Target className="h-10 w-10 text-primary" />;
+        return <Target className="h-10 w-10 text-green-100" />;
       case "payments":
-        return <DollarSign className="h-10 w-10 text-primary" />;
+        return <DollarSign className="h-10 w-10 text-purple-100" />;
       default:
         return null;
     }
   };
 
   return (
-    <Card className="flex items-center p-6 gap-4 shadow-sm hover:shadow-md transition">
-      <div className="bg-primary/10 rounded-full p-3">
-        {renderIcon()}
-      </div>
+    <Card
+      className={cn(
+        "flex items-center bg-gradient-to-br p-6 gap-4 shadow-sm hover:shadow-md transition",
+        getCardStyles()
+      )}
+    >
+      <div className="bg-white/10 rounded-full p-3">{renderIcon()}</div>
       <CardContent className="flex flex-col justify-center p-0">
-        <p className="text-muted-foreground text-sm">{title}</p>
-        <h3 className="font-bold text-2xl text-center">{value}</h3>
+        <p className="text-white/70 text-sm">{title}</p>
+        <h3 className="font-bold text-2xl text-center text-white">{value}</h3>
       </CardContent>
     </Card>
   );

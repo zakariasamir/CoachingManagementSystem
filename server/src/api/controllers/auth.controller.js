@@ -105,11 +105,12 @@ const login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        organizations: orgRoles.map((or) => ({
-          id: or.organizationId._id,
-          name: or.organizationId.name,
-          role: or.role,
-        })),
+        role: user.role,
+        // organizations: orgRoles.map((or) => ({
+        //   id: or.organizationId._id,
+        //   name: or.organizationId.name,
+        //   role: or.role,
+        // })),
       },
     });
   } catch (error) {
