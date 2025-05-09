@@ -12,10 +12,12 @@ import EntrepreneurGoals from "@/pages/entrepreneur/Goals";
 import ManagerLayout from "@/layouts/ManagerLayout";
 import CoachLayout from "@/layouts/CoachLayout";
 import EntrepreneurLayout from "@/layouts/EntrepreneurLayout";
+import Home from "./pages/Home";
 
 export default function App() {
   return (
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
         {/* Manager Layout */}

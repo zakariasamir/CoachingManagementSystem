@@ -115,7 +115,9 @@ const Login = () => {
 
             {error && (
               <div className="p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-600 dark:bg-red-900/50 dark:border-red-800 dark:text-red-400">
-                {error instanceof Error ? error.message : "Login failed"}
+                {error instanceof Error
+                  ? "Invalid email or password"
+                  : "Login failed"}
               </div>
             )}
 

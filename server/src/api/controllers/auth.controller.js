@@ -106,11 +106,11 @@ const login = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        // organizations: orgRoles.map((or) => ({
-        //   id: or.organizationId._id,
-        //   name: or.organizationId.name,
-        //   role: or.role,
-        // })),
+        organizations: orgRoles.map((or) => ({
+          id: or.organizationId._id,
+          name: or.organizationId.name,
+          role: or.role,
+        })),
       },
     });
   } catch (error) {
@@ -123,4 +123,34 @@ const logout = (req, res) => {
   res.status(200).json({ message: "Logout successful" });
 };
 
-export { register, login, logout };
+const checkAuthStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    const orgRoles = await OrganizationUser.find({
+      userId: user._id,
+      status: "active",
+    }).populate("organizationId", "name");
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    res.json({
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        organizations: orgRoles.map((or) => ({
+          id: or.organizationId._id,
+          name: or.organizationId.name,
+          role: or.role,
+        })),
+      },
+    });
+  } catch (error) {
+    res.status(401).json({ error: "Not authenticated" });
+  }
+};
+
+export { register, login, logout, checkAuthStatus };

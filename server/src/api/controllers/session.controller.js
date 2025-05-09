@@ -3,19 +3,27 @@ import { SessionParticipant } from "../models/sessionParticipant.model.js";
 import { SessionOrganization } from "../models/sessionOrganization.model.js";
 
 const createSession = async (req, res) => {
-  const { startTime, endTime, organizationId, coachId, entrepreneurId } = req.body;
+  const { title, startTime, endTime, organizationId, coachId, entrepreneurId } =
+    req.body;
 
-  if (!startTime || !endTime || !organizationId || !coachId || !entrepreneurId) {
+  if (
+    !title ||
+    !startTime ||
+    !endTime ||
+    !organizationId ||
+    !coachId ||
+    !entrepreneurId
+  ) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
 
   try {
-    const session = new Session({ startTime, endTime });
+    const session = new Session({ title, startTime, endTime });
     await session.save();
 
     const sessionOrg = new SessionOrganization({
       sessionId: session._id,
-      organizationId
+      organizationId,
     });
     await sessionOrg.save();
 
@@ -23,15 +31,18 @@ const createSession = async (req, res) => {
     const coachParticipant = new SessionParticipant({
       sessionId: session._id,
       userId: coachId,
-      role: 'coach'
+      role: "coach",
     });
     const entrepreneurParticipant = new SessionParticipant({
       sessionId: session._id,
       userId: entrepreneurId,
-      role: 'entrepreneur'
+      role: "entrepreneur",
     });
 
-    await Promise.all([coachParticipant.save(), entrepreneurParticipant.save()]);
+    await Promise.all([
+      coachParticipant.save(),
+      entrepreneurParticipant.save(),
+    ]);
 
     res.status(201).json({ message: "Session created successfully", session });
   } catch (error) {
@@ -56,27 +67,73 @@ const updateSessionStatus = async (req, res) => {
   }
 };
 
+// const getSessions = async (req, res) => {
+//   const { organizationId, userId, role } = req.query;
+
+//   try {
+//     let sessions = [];
+//     if (userId) {
+//       const participations = await SessionParticipant.find({
+//         userId,
+//         ...(role && { role })
+//       });
+//       const sessionIds = participations.map(p => p.sessionId);
+//       sessions = await Session.find({ _id: { $in: sessionIds } });
+//     } else if (organizationId) {
+//       const orgSessions = await SessionOrganization.find({ organizationId });
+//       const sessionIds = orgSessions.map(os => os.sessionId);
+//       sessions = await Session.find({ _id: { $in: sessionIds } });
+//     }
+
+//     res.status(200).json(sessions);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching sessions", error });
+//   }
+// };
+
+// get all sessions by organizationId and send with it all the participants
 const getSessions = async (req, res) => {
-  const { organizationId, userId, role } = req.query;
+  const { organizationId } = req.query;
 
   try {
-    let sessions = [];
-    if (userId) {
-      const participations = await SessionParticipant.find({ 
-        userId,
-        ...(role && { role })
-      });
-      const sessionIds = participations.map(p => p.sessionId);
-      sessions = await Session.find({ _id: { $in: sessionIds } });
-    } else if (organizationId) {
-      const orgSessions = await SessionOrganization.find({ organizationId });
-      const sessionIds = orgSessions.map(os => os.sessionId);
-      sessions = await Session.find({ _id: { $in: sessionIds } });
-    }
+    // Get sessions for the organization
+    const orgSessions = await SessionOrganization.find({ organizationId });
+    const sessionIds = orgSessions.map((os) => os.sessionId);
+    const sessions = await Session.find({ _id: { $in: sessionIds } });
 
-    res.status(200).json(sessions);
+    // Get participants with populated user data
+    const participants = await SessionParticipant.find({
+      sessionId: { $in: sessionIds },
+    }).populate("userId", "firstName lastName email");
+
+    // Combine sessions with their participants, filtering out participants with missing users
+    const sessionsWithParticipants = sessions.map((session) => ({
+      ...session.toObject(),
+      participants: participants
+        .filter((p) => p.sessionId.toString() === session._id.toString())
+        .filter((p) => p.userId)
+        .map((participant) => ({
+          _id: participant._id,
+          sessionId: participant.sessionId,
+          userId: participant.userId._id,
+          role: participant.role,
+          joinedAt: participant.joinedAt,
+          user: {
+            firstName: participant.userId.firstName,
+            lastName: participant.userId.lastName,
+            email: participant.userId.email,
+          },
+        })),
+    }));
+
+    res.status(200).json(sessionsWithParticipants);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching sessions", error });
+    console.error("Error in getSessions:", error);
+    res.status(500).json({
+      message: "Error fetching sessions",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 };
 
@@ -93,11 +150,11 @@ const getSessionById = async (req, res) => {
     res.status(200).json({
       session,
       participants,
-      organizations
+      organizations,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching session", error });
   }
-}
+};
 
 export { createSession, updateSessionStatus, getSessions, getSessionById };

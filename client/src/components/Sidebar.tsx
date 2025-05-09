@@ -1,16 +1,20 @@
-// src/components/Sidebar.tsx
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Calendar, Flag, CreditCard, Sun, Moon, X } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
+// import axios from "axios";
 import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
   const { data } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const role = data.user.role;
+  if (!data?.user) {
+    navigate("/login");
+  }
+  const role = data?.user?.role;
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 

@@ -2,13 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SessionCardProps {
   session: {
-    id: number;
+    id: string;
     title: string;
-    date: string;
+    startTime: string;
+    endTime: string;
+    status: "scheduled" | "completed" | "cancelled";
+    notes?: string;
     coach: string;
     entrepreneur: string;
-    notes: string;
   };
+  onStatusChange: (
+    newStatus: "scheduled" | "completed" | "cancelled"
+  ) => Promise<void>;
 }
 
 export const SessionCard = ({ session }: SessionCardProps) => {
@@ -25,11 +30,21 @@ export const SessionCard = ({ session }: SessionCardProps) => {
           <strong>Entrepreneur:</strong> {session.entrepreneur}
         </p>
         <p>
-          <strong>Date:</strong> {new Date(session.date).toLocaleString()}
+          <strong>Start Time:</strong>{" "}
+          {new Date(session.startTime).toLocaleString()}
         </p>
         <p>
-          <strong>Notes:</strong> {session.notes}
+          <strong>End Time:</strong>{" "}
+          {new Date(session.endTime).toLocaleString()}
         </p>
+        <p>
+          <strong>Status:</strong> {session.status}
+        </p>
+        {session.notes && (
+          <p>
+            <strong>Notes:</strong> {session.notes}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

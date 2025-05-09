@@ -23,10 +23,10 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { data } = useAuth();
+  console.log("data", data);
 
-  
   const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
   const { trigger: logout, isMutating } = useSWRMutation(
@@ -85,11 +85,13 @@ export const Navbar = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild disabled={isMutating}>
             <Avatar className="h-9 w-9 cursor-pointer">
-              <AvatarImage 
-                src={data.user.avatar || "/placeholder-user.jpg"} 
-                alt={`${firstName} ${lastName}`} 
+              <AvatarImage
+                src={data.user.avatar || "/placeholder-user.jpg"}
+                alt={`${firstName} ${lastName}`}
               />
-              <AvatarFallback>{getInitials(firstName, lastName)}</AvatarFallback>
+              <AvatarFallback>
+                {getInitials(firstName, lastName)}
+              </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end">
@@ -98,15 +100,12 @@ export const Navbar = () => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link
-                to="/profile"
-                className="flex w-full items-center"
-              >
+              <Link to="/profile" className="flex w-full items-center">
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onSelect={handleLogout}
               disabled={isMutating}
               className="flex items-center gap-2"

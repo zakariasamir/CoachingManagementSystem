@@ -2,6 +2,7 @@ import { StatsCard } from "@/components/StatsCard";
 import useSWR from "swr";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Stats {
   totalSessions: number;
@@ -15,11 +16,23 @@ async function fetchStats(url: string) {
 }
 
 export default function ManagerDashboard() {
+  const { data } = useAuth();
+  const organizationId = data?.user?.organizations[0]?.id;
   const {
     data: stats,
     error,
     isLoading,
-  } = useSWR<Stats>(`${import.meta.env.VITE_BASE_URL}/stats`, fetchStats);
+  } = useSWR<Stats>(
+    organizationId
+      ? `${
+          import.meta.env.VITE_BASE_URL
+        }/manager/dashboard?organizationId=${organizationId}`
+      : null,
+    fetchStats,
+    {
+      revalidateOnFocus: false,
+    }
+  );
 
   if (error) {
     return (
