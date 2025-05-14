@@ -13,16 +13,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/Icons";
+// import { useOrganization } from "@/hooks/useOrganization";
 import { cn } from "@/lib/utils";
 import { mutate } from "swr";
 
 interface LoginResponse {
   user: {
-    id: string;
+    _id: string;
     firstName: string;
     lastName: string;
     email: string;
-    role: string;
+    organizations: Array<{
+      id: string;
+      name: string;
+      role: string;
+    }>;
   };
   message: string;
 }
@@ -48,10 +53,26 @@ const Login = () => {
     `${import.meta.env.VITE_BASE_URL}/auth/login`,
     loginRequest,
     {
-      onSuccess: (data) => {
-        if (data.user.role) {
-          navigate(`/${data.user.role}/dashboard`);
+      onSuccess: async (data) => {
+        // Set the first organization as default if exists
+        if (data.user.organizations.length > 0) {
+          const organizations = data.user.organizations;
+          const defaultOrg = localStorage.getItem("currentOrganizationId");
+          const selectedOrg = organizations.find(
+            (org) => org.id === defaultOrg
+          );
+          if (selectedOrg) {
+            console.log("Selected organization:", selectedOrg);
+            navigate(`/${selectedOrg.role}/dashboard`);
+          }
+          // Store the first organization ID in localStorage
+          if (!defaultOrg || !selectedOrg) {
+            localStorage.setItem("currentOrganizationId", organizations[0].id);
+            navigate(`/${organizations[0].role}/dashboard`);
+          }
         }
+        // Mutate the auth state to update the user data
+        await mutate("/auth/check-auth-status");
       },
     }
   );

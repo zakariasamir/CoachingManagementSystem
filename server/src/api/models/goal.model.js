@@ -10,7 +10,7 @@ const goalSchema = new Schema({
   },
   title: { type: String, required: true },
   description: { type: String },
-  Progress: { type: Number, default: 0 },
+  progress: { type: Number, default: 0 },
   status: {
     type: String,
     enum: ["not-started", "in-progress", "completed"],
@@ -24,6 +24,32 @@ const goalSchema = new Schema({
     },
   ],
   createdAt: { type: Date, default: Date.now },
+});
+
+goalSchema.pre(['save', 'findOneAndUpdate'], function(next) {
+  // For findOneAndUpdate operations
+  if (this.getUpdate) {
+    const update = this.getUpdate();
+    if (update.progress !== undefined) {
+      if (update.progress === 100) {
+        update.status = "completed";
+      } else if (update.progress > 0) {
+        update.status = "in-progress";
+      } else if (update.progress === 0) {
+        update.status = "not-started";
+      }
+    }
+  } else {
+    // For save operations
+    if (this.progress === 100) {
+      this.status = "completed";
+    } else if (this.progress > 0) {
+      this.status = "in-progress";
+    } else if (this.progress === 0) {
+      this.status = "not-started";
+    }
+  }
+  next();
 });
 
 export const Goal = model("Goal", goalSchema);

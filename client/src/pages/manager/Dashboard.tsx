@@ -2,11 +2,12 @@ import { StatsCard } from "@/components/StatsCard";
 import useSWR from "swr";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface Stats {
   totalSessions: number;
-  activeGoals: number;
+  totalGoals: number;
   payments: number;
 }
 
@@ -16,8 +17,9 @@ async function fetchStats(url: string) {
 }
 
 export default function ManagerDashboard() {
-  const { data } = useAuth();
-  const organizationId = data?.user?.organizations[0]?.id;
+  // const { user } = useAuth();
+  const { currentOrganization } = useOrganization();
+  const organizationId = currentOrganization?.id;
   const {
     data: stats,
     error,
@@ -63,7 +65,7 @@ export default function ManagerDashboard() {
             />
             <StatsCard
               title="Active Goals"
-              value={stats?.activeGoals ?? 0}
+              value={stats?.totalGoals ?? 0}
               icon="goals"
             />
             <StatsCard

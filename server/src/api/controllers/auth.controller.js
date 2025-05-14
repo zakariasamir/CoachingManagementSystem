@@ -79,12 +79,6 @@ const login = async (req, res) => {
       {
         id: user._id,
         email: user.email,
-        role: user.role,
-        organizations: orgRoles.map((or) => ({
-          id: or.organizationId._id,
-          name: or.organizationId.name,
-          // role: or.role,
-        })),
       },
       process.env.JWT_SECRET,
       {
@@ -94,18 +88,19 @@ const login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      // secure: process.env.NODE_ENV === "production",
+      secure: true,
+      sameSite: "None",
+      maxAge: 3600000, // 1 hour
     });
 
     res.status(200).json({
       message: "Login successful",
       user: {
-        id: user._id,
+        userId: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role,
         organizations: orgRoles.map((or) => ({
           id: or.organizationId._id,
           name: or.organizationId.name,
@@ -125,7 +120,11 @@ const logout = (req, res) => {
 
 const checkAuthStatus = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const userId = req.user.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+    const user = await User.findById(userId).select("-password");
     const orgRoles = await OrganizationUser.find({
       userId: user._id,
       status: "active",
@@ -136,11 +135,10 @@ const checkAuthStatus = async (req, res) => {
 
     res.json({
       user: {
-        _id: user._id,
+        userId: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.role,
         organizations: orgRoles.map((or) => ({
           id: or.organizationId._id,
           name: or.organizationId.name,
@@ -149,8 +147,43 @@ const checkAuthStatus = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(401).json({ error: "Not authenticated" });
+    res.status(401).json({ error: error.message });
   }
 };
 
-export { register, login, logout, checkAuthStatus };
+const switchOrganization = async (req, res) => {
+  const { organizationId } = req.body;
+  const { userId } = req.user;
+
+  try {
+    // Verify user belongs to organization
+    const orgUser = await OrganizationUser.findOne({
+      userId,
+      organizationId,
+      status: "active",
+    }).populate("organizationId", "name");
+
+    if (!orgUser) {
+      return res.status(403).json({
+        message: "User does not belong to this organization",
+      });
+    }
+
+    res.status(200).json({
+      message: "Organization switched successfully",
+      organization: {
+        id: orgUser.organizationId._id,
+        name: orgUser.organizationId.name,
+        role: orgUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error switching organization:", error);
+    res.status(500).json({
+      message: "Error switching organization",
+      error: error.message,
+    });
+  }
+};
+
+export { register, login, logout, checkAuthStatus, switchOrganization };

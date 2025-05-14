@@ -13,8 +13,12 @@ import entrepreneurRoutes from "./api/routes/entrepreneur.route.js";
 import cookieParser from "cookie-parser";
 
 const corsOptions = {
-  origin: "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  // origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://d232-105-75-217-203.ngrok-free.app",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
 

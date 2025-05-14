@@ -5,13 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
 
 const Home = () => {
-  const { data } = useAuth();
-  console.log("data", data);
+  const { user } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
-    if (data?.user) {
+    if (user) {
       // Redirect based on user role
-      switch (data.user.role) {
+      switch (user.role) {
         case "manager":
           navigate("/manager/dashboard");
           break;
@@ -25,9 +24,9 @@ const Home = () => {
           navigate("/login");
       }
     }
-  }, [data, navigate]);
+  }, [user, navigate]);
 
-  if (data === undefined) {
+  if (user === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

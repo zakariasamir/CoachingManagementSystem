@@ -1,18 +1,10 @@
 import pkg from "jsonwebtoken";
+import { OrganizationUser } from "../models/organizationUser.model.js";
 const { verify } = pkg;
 const { JWT_SECRET } = process.env;
 
-const authenticate = (req, res, next) => {
-  if (!req.cookies) {
-    return res.status(401).json({
-      success: false,
-      message: "Access denied. No cookies available.",
-    });
-  }
-  const token = req.cookies.token;
-
-  if (!token) {
-    console.log("No token found in cookies");
+const authenticate = async (req, res, next) => {
+  if (!req.cookies?.token) {
     return res.status(401).json({
       success: false,
       message: "Access denied. No token provided.",
@@ -20,7 +12,7 @@ const authenticate = (req, res, next) => {
   }
 
   try {
-    const decoded = verify(token, JWT_SECRET);
+    const decoded = verify(req.cookies.token, JWT_SECRET);
 
     if (decoded.exp * 1000 < Date.now()) {
       return res.status(401).json({
@@ -29,32 +21,46 @@ const authenticate = (req, res, next) => {
       });
     }
 
+    // Get organizationId from query params or request body
+    const organizationId = req.query.organizationId || null;
+    // If no organizationId is provided, get the user's default organization
+
+    if (!organizationId) {
+      // const user = await OrganizationUser.findOne({
+      //   userId: decoded.id,
+      //   status: "active",
+      // });
+      // return res.status(200).json(user);
+      return next();
+    }
+
+    // Find user's role in the specific organization
+    const orgUser = await OrganizationUser.findOne({
+      userId: decoded.id,
+      organizationId,
+      status: "active",
+    });
+
+    if (!orgUser) {
+      return res.status(403).json({
+        success: false,
+        message: "User does not belong to this organization",
+      });
+    }
+
+    // Add both user info and organization context to request
     req.user = {
-      id: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
+      userId: decoded.id,
+      organizationId,
+      role: orgUser.role, // This is the role specific to the organization
     };
+
     next();
   } catch (error) {
-    console.error("Token verification failed:", error.message);
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token",
-      });
-    }
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token has expired",
-      });
-    }
-
-    return res.status(500).json({
+    console.error("Authentication failed:", error.message);
+    return res.status(401).json({
       success: false,
-      message: "Failed to authenticate token",
+      message: "Invalid token hello",
     });
   }
 };

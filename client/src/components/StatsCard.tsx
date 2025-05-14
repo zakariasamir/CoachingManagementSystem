@@ -1,11 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, CalendarCheck, Target } from "lucide-react";
+import { DollarSign, CalendarCheck, Target, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
   title: string;
   value: number;
-  icon: "sessions" | "goals" | "payments";
+  icon: "sessions" | "goals" | "payments" | "check";
 }
 
 export function StatsCard({ title, value, icon }: StatsCardProps) {
@@ -30,6 +30,8 @@ export function StatsCard({ title, value, icon }: StatsCardProps) {
         return <Target className="h-10 w-10 text-green-100" />;
       case "payments":
         return <DollarSign className="h-10 w-10 text-purple-100" />;
+      case "check":
+        return <Check className="h-10 w-10 text-green-100" />;
       default:
         return null;
     }

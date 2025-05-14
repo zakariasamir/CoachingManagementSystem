@@ -1,4 +1,5 @@
 import {
+  getDashboardStats,
   listSessions,
   listGoals,
   updateGoal,
@@ -8,6 +9,8 @@ import authenticate from "../middlewares/auth.middleware.js";
 import authorize from "../middlewares/role.middleware.js";
 const auth = [authenticate, authorize("entrepreneur")];
 const router = Router();
+// Get dashboard stats
+router.get("/dashboard", auth, getDashboardStats);
 // List sessions
 router.get("/sessions", auth, listSessions);
 // List goals

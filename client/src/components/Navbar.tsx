@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 
 async function logoutRequest(url: string) {
   await axios.post(url, {}, { withCredentials: true });
@@ -22,8 +23,13 @@ async function logoutRequest(url: string) {
 export const Navbar = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { data } = useAuth();
-  console.log("data", data);
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, navigate, isLoading]);
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
@@ -50,12 +56,11 @@ export const Navbar = () => {
     }
   };
 
-  // Early return if no user data
-  if (!data?.user) {
+  if (!user) {
     return null;
   }
 
-  const { firstName, lastName } = data.user;
+  const { firstName, lastName } = user;
 
   return (
     <header className="h-16 flex items-center justify-between px-4 sm:px-6 border-b bg-white dark:bg-gray-900 dark:border-gray-700">
@@ -86,7 +91,7 @@ export const Navbar = () => {
           <DropdownMenuTrigger asChild disabled={isMutating}>
             <Avatar className="h-9 w-9 cursor-pointer">
               <AvatarImage
-                src={data.user.avatar || "/placeholder-user.jpg"}
+                // src={user.avatar || "/placeholder-user.jpg"}
                 alt={`${firstName} ${lastName}`}
               />
               <AvatarFallback>

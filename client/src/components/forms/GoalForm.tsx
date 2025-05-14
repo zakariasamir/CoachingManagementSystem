@@ -2,6 +2,9 @@ import { useState } from "react";
 import useSWR from "swr";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +12,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,29 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 
 interface User {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
 }
 
-interface SessionFormData {
-  title: string;
-  startTime: string;
-  endTime: string;
-  coachId: string;
-  entrepreneurId: string;
-  notes: string;
-}
-
-interface SessionFormProps {
+interface GoalFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: SessionFormData) => Promise<void>;
+  onSubmit: (data: any) => Promise<void>;
   organizationId: string;
 }
 
@@ -49,22 +39,22 @@ async function fetchUsers(url: string) {
   return response.data;
 }
 
-const SessionForm = ({
+const GoalForm = ({
   isOpen,
   onClose,
   onSubmit,
   organizationId,
-}: SessionFormProps) => {
-  const [sessionData, setSessionData] = useState<SessionFormData>({
+}: GoalFormProps) => {
+  const [goalData, setGoalData] = useState({
     title: "",
-    startTime: "",
-    endTime: "",
+    description: "",
     coachId: "",
     entrepreneurId: "",
-    notes: "",
+    status: "not_started",
+    progress: 0,
   });
 
-  const { data: coaches } = useSWR<User[]>(
+  const { data: coaches } = useSWR(
     organizationId
       ? `${
           import.meta.env.VITE_BASE_URL
@@ -73,7 +63,7 @@ const SessionForm = ({
     fetchUsers
   );
 
-  const { data: entrepreneurs } = useSWR<User[]>(
+  const { data: entrepreneurs } = useSWR(
     organizationId
       ? `${
           import.meta.env.VITE_BASE_URL
@@ -88,54 +78,42 @@ const SessionForm = ({
       | { target: { name: string; value: string } }
   ) => {
     const { name, value } = e.target;
-    setSessionData((prev) => ({ ...prev, [name]: value }));
+    setGoalData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(sessionData);
+    await onSubmit(goalData);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Session</DialogTitle>
-          <DialogDescription>Set up a new coaching session</DialogDescription>
+          <DialogTitle>Create Goal</DialogTitle>
+          <DialogDescription>Set up a new goal</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Session Title</Label>
+            <Label htmlFor="title">Goal Title</Label>
             <Input
               id="title"
               name="title"
-              value={sessionData.title}
+              value={goalData.title}
               onChange={handleChange}
-              placeholder="Enter session title"
+              placeholder="Enter goal title"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="startTime">Start Time</Label>
-            <Input
-              id="startTime"
-              name="startTime"
-              type="datetime-local"
-              value={sessionData.startTime}
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={goalData.description}
               onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="endTime">End Time</Label>
-            <Input
-              id="endTime"
-              name="endTime"
-              type="datetime-local"
-              value={sessionData.endTime}
-              onChange={handleChange}
+              placeholder="Enter goal description"
               required
             />
           </div>
@@ -144,7 +122,7 @@ const SessionForm = ({
             <Label htmlFor="coachId">Coach</Label>
             <Select
               name="coachId"
-              value={sessionData.coachId}
+              value={goalData.coachId}
               onValueChange={(value) =>
                 handleChange({ target: { name: "coachId", value } })
               }
@@ -166,7 +144,7 @@ const SessionForm = ({
             <Label htmlFor="entrepreneurId">Entrepreneur</Label>
             <Select
               name="entrepreneurId"
-              value={sessionData.entrepreneurId}
+              value={goalData.entrepreneurId}
               onValueChange={(value) =>
                 handleChange({ target: { name: "entrepreneurId", value } })
               }
@@ -184,19 +162,8 @@ const SessionForm = ({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={sessionData.notes}
-              onChange={handleChange}
-              placeholder="Add any session notes..."
-            />
-          </div>
-
           <Button type="submit" className="w-full">
-            Create Session
+            Create Goal
           </Button>
         </form>
       </DialogContent>
@@ -204,4 +171,4 @@ const SessionForm = ({
   );
 };
 
-export default SessionForm;
+export default GoalForm;

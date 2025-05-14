@@ -1,29 +1,105 @@
 import { SessionParticipant } from "../models/sessionParticipant.model.js";
+import { SessionOrganization } from "../models/sessionOrganization.model.js";
 import { Goal } from "../models/goal.model.js";
 import { Session } from "../models/session.model.js";
 
-const listSessions = async (req, res) => {
+const getDashboardStats = async (req, res) => {
   const { userId } = req.user;
   try {
-    const sessions = await SessionParticipant.find({
+    const coachSessions = await SessionParticipant.find({
       userId,
       role: "coach",
-    }).populate({
-      path: "sessionId",
-      populate: {
-        path: "participants",
-        populate: {
-          path: "userId",
-          select: "firstName lastName email",
-        },
-      },
+    });
+    const sessionIds = coachSessions.map((cs) => cs.sessionId);
+    const totalSessions = await Session.countDocuments({
+      _id: { $in: sessionIds },
+    });
+    const completedSessions = await Session.countDocuments({
+      _id: { $in: sessionIds },
+      status: "completed",
+    });
+    const totalGoals = await Goal.countDocuments({
+      coachId: userId,
     });
 
-    res.status(200).json(sessions.map((sp) => sp.sessionId));
+    res.status(200).json({
+      totalSessions,
+      completedSessions,
+      totalGoals,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching sessions", error: error.message });
+    res.status(500).json({
+      message: "Error fetching dashboard stats",
+      error: error.message,
+    });
+  }
+};
+
+const listSessions = async (req, res) => {
+  const { userId } = req.user;
+  const { organizationId } = req.query;
+
+  try {
+    const sessionParticipants = await SessionParticipant.find({
+      userId,
+      role: "coach",
+    });
+
+    const sessionIds = sessionParticipants.map((sp) => sp.sessionId);
+
+    const sessions = await Session.find({
+      _id: { $in: sessionIds },
+    });
+
+    const orgSessions = await SessionOrganization.find({
+      organizationId,
+      sessionId: { $in: sessionIds },
+    });
+
+    const participants = await SessionParticipant.find({
+      sessionId: { $in: sessionIds },
+    }).populate("userId", "firstName lastName email");
+    const orgSessionIds = orgSessions.map((os) => os.sessionId.toString());
+
+    const filteredSessions = sessions.filter((session) =>
+      orgSessionIds.includes(session._id.toString())
+    );
+    const sessionsWithParticipants = filteredSessions.map((session) => ({
+      ...session.toObject(),
+      participants: participants.filter(
+        (p) => p.sessionId.toString() === session._id.toString()
+      ),
+    }));
+
+    res.status(200).json(sessionsWithParticipants);
+  } catch (error) {
+    console.error("Error in listSessions:", error);
+    res.status(500).json({
+      message: "Error fetching sessions",
+      error: error.message,
+    });
+  }
+};
+
+const updateSession = async (req, res) => {
+  const { sessionId } = req.params;
+  const { status } = req.body;
+  try {
+    const session = await Session.findByIdAndUpdate(
+      sessionId,
+      { status },
+      { new: true }
+    )
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+    res.status(200).json(session);
+  } catch (error) {
+    console.error("Error in updateSession:", error);
+    res.status(500).json({
+      message: "Error updating session",
+      error: error.message,
+    });
   }
 };
 
@@ -63,4 +139,33 @@ const updateGoal = async (req, res) => {
   }
 };
 
-export { listSessions, listGoals, updateGoal };
+const updateGoalProgress = async (req, res) => {
+  const { goalId } = req.params;
+  const { progress } = req.body;
+  try {
+    const goal = await Goal.findByIdAndUpdate(
+      goalId,
+      { progress },
+      { new: true }
+    ).populate("entrepreneurId", "firstName lastName email");
+
+    if (!goal) {
+      return res.status(404).json({ message: "Goal not found" });
+    }
+
+    res.status(200).json(goal);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating goal progress", error: error.message });
+  }
+}
+
+export {
+  getDashboardStats,
+  listSessions,
+  updateSession,
+  listGoals,
+  updateGoal,
+  updateGoalProgress,
+};

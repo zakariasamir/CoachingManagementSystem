@@ -1,7 +1,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
+// import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { SessionCard } from "@/components/SessionCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,8 +85,9 @@ async function fetchSessions(url: string) {
 
 const Sessions = () => {
   const [isSessionFormOpen, setSessionFormOpen] = useState(false);
-  const { data } = useAuth();
-  const organizationId = data?.user?.organizations[0]?.id;
+  // const { data } = useAuth();
+  const { currentOrganization } = useOrganization();
+  const organizationId = currentOrganization?.id;
 
   const {
     data: sessions,
@@ -131,7 +133,7 @@ const Sessions = () => {
         isOpen={isSessionFormOpen}
         onClose={() => setSessionFormOpen(false)}
         onSubmit={handleAddSession}
-        organizationId={organizationId}
+        organizationId={organizationId || ""}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
