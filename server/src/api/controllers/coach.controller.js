@@ -1,6 +1,5 @@
 import { SessionParticipant } from "../models/sessionParticipant.model.js";
 import { SessionOrganization } from "../models/sessionOrganization.model.js";
-import { Organization } from "../models/organization.model.js";
 import { OrganizationUser } from "../models/organizationUser.model.js";
 import { Goal } from "../models/goal.model.js";
 import { Session } from "../models/session.model.js";
@@ -120,73 +119,70 @@ const listGoals = async (req, res) => {
 
 const updateGoal = async (req, res) => {
   const { goalId } = req.params;
-  const { title, description, Progress, status } = req.body;
+  const { progress, update } = req.body;
 
   try {
-    const goal = await Goal.findByIdAndUpdate(
-      goalId,
-      { title, description, Progress, status },
-      { new: true }
-    ).populate("entrepreneurId", "firstName lastName email");
-
+    // First, find the goal to check if it exists
+    const goal = await Goal.findById(goalId);
+    
     if (!goal) {
       return res.status(404).json({ message: "Goal not found" });
     }
 
-    res.status(200).json(goal);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating goal", error: error.message });
-  }
-};
+    // Prepare the update object
+    const updateData = {
+      progress: progress,
+      // Update status based on progress
+      status: progress === 100 ? "completed" : progress > 0 ? "in-progress" : "not-started"
+    };
 
-const updateGoalProgress = async (req, res) => {
-  const { goalId } = req.params;
-  const { progress } = req.body;
-  try {
-    const goal = await Goal.findByIdAndUpdate(
+    // If there's an update note, add it to the updates array
+    if (update?.content) {
+      updateData.$push = {
+        updates: {
+          content: update.content,
+          timestamp: new Date(),
+          updatedBy: req.user.userId
+        }
+      };
+    }
+
+    // Update the goal with the new data
+    const updatedGoal = await Goal.findByIdAndUpdate(
       goalId,
-      { progress },
+      updateData,
       { new: true }
     ).populate("entrepreneurId", "firstName lastName email");
 
-    if (!goal) {
-      return res.status(404).json({ message: "Goal not found" });
-    }
-
-    res.status(200).json(goal);
+    res.status(200).json(updatedGoal);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating goal progress", error: error.message });
+    console.error("Error updating goal:", error);
+    res.status(500).json({ 
+      message: "Error updating goal", 
+      error: error.message 
+    });
   }
 };
-// const listOrganizations = async (req, res) => {
+
+// const updateGoalProgress = async (req, res) => {
+//   const { goalId } = req.params;
+//   const { progress } = req.body;
 //   try {
-//     const organizations = await Organization.find();
-//     const orgUsers = await OrganizationUser.find({
-//       userId: req.user.userId,
-//       status: "active",
-//     }).populate("organizationId", "name isSelected");
-//     res.status(200).json(
-//       organizations.map((org) => {
-//         const orgUser = orgUsers.find(
-//           (ou) => ou.organizationId._id.toString() === org._id.toString()
-//         );
-//         return {
-//           id: org._id,
-//           name: org.name,
-//           isSelected: org.isSelected,
-//           role: orgUser ? orgUser.role : null, // Access role directly
-//         };
-//       })
-//     );
+//     const goal = await Goal.findByIdAndUpdate(
+//       goalId,
+//       { progress },
+//       { new: true }
+//     ).populate("entrepreneurId", "firstName lastName email");
+
+//     if (!goal) {
+//       return res.status(404).json({ message: "Goal not found" });
+//     }
+
+//     res.status(200).json(goal);
 //   } catch (error) {
-//     res.status(500).json({
-//       message: "Error fetching organizations",
-//       error: error.message,
-//     });
+//     res
+//       .status(500)
+//       .json({ message: "Error updating goal progress", error: error.message });
 //   }
 // };
 
@@ -221,6 +217,6 @@ export {
   updateSession,
   listGoals,
   updateGoal,
-  updateGoalProgress,
+  // updateGoalProgress,
   listOrganizations,
 };

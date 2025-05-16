@@ -168,7 +168,6 @@ const checkAuthStatus = async (req, res) => {
 
     // Find the selected organization
     const selectedOrg = orgRoles.find((or) => or.isSelected);
-    console.log("Selected Org:", selectedOrg);
 
     res.status(200).json({
       user: {

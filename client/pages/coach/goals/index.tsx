@@ -4,6 +4,7 @@ import useSWR from "swr";
 import axios from "axios";
 import { toast } from "sonner";
 import CoachLayout from "@/layouts/CoachLayouts";
+import { UpdateGoalDialog } from "@/components/UpdateGoalDialog";
 
 interface Goal {
   _id: string;
@@ -48,21 +49,23 @@ export default function CoachGoals() {
     fetchGoals
   );
 
-  const handleProgressUpdate = async (goalId: string, progress: number) => {
+  const handleGoalUpdate = async (goalId: string, progress: number, note: string) => {
     try {
       await axios.patch(
         `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/goals/${goalId}`,
         {
           progress,
-          // Status will be updated automatically by the backend
+          update: {
+            content: note,
+          },
         },
         { withCredentials: true }
       );
       await mutate();
-      toast.success("Goal progress updated");
+      toast.success("Goal updated successfully");
     } catch (error) {
-      toast.error("Failed to update goal progress");
-      console.error("Error updating goal:", error);
+      toast.error("Failed to update goal");
+      throw error;
     }
   };
 
@@ -85,13 +88,13 @@ export default function CoachGoals() {
             </div>
           ) : (
             goals.map((goal) => (
-              <GoalCard
-                key={goal._id}
-                goal={goal}
-                onProgressUpdate={(progress: number) =>
-                  handleProgressUpdate(goal._id, progress)
-                }
-              />
+              <div key={goal._id} className="space-y-2">
+                <GoalCard goal={goal} />
+                <UpdateGoalDialog
+                  goal={goal}
+                  onProgressUpdate={handleGoalUpdate}
+                />
+              </div>
             ))
           )}
         </div>

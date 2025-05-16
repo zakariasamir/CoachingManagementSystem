@@ -27,7 +27,6 @@ const goalSchema = new Schema({
 });
 
 goalSchema.pre(['save', 'findOneAndUpdate'], function(next) {
-  // For findOneAndUpdate operations
   if (this.getUpdate) {
     const update = this.getUpdate();
     if (update.progress !== undefined) {
@@ -40,7 +39,6 @@ goalSchema.pre(['save', 'findOneAndUpdate'], function(next) {
       }
     }
   } else {
-    // For save operations
     if (this.progress === 100) {
       this.status = "completed";
     } else if (this.progress > 0) {

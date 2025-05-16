@@ -24,7 +24,6 @@ const fetcher = async (url: string) => {
     const response = await axios.get<AuthResponse>(url, {
       withCredentials: true,
     });
-    console.log("Auth response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching auth status:", error);

@@ -5,26 +5,23 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { useOrganization } from "@/hooks/useOrganization"; // Import useOrganization
-import { Loader2 } from "lucide-react"; // Import Loader2 icon
+import { useOrganization } from "@/hooks/useOrganization";
+import { Loader2 } from "lucide-react";
 
 const Home: NextPage = () => {
-  const { user, isLoading: isAuthLoading } = useAuth(); // Get user and loading state from useAuth
-  const { selectedOrganization, isLoading: isOrgLoading } = useOrganization(); // Get selectedOrganization and loading state from useOrganization
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { selectedOrganization, isLoading: isOrgLoading } = useOrganization();
   const router = useRouter();
 
   useEffect(() => {
 
     if (!isAuthLoading || !isOrgLoading) {
-      // Wait for both auth and org data to load
-      console.log("selectedOrganization from home", selectedOrganization);
       if (user && selectedOrganization) {
         router.push(`/${selectedOrganization.role}/dashboard`);
       } else if (user && !selectedOrganization) {
-        // Handle the case where the user has no selected organization (e.g., show a selection page)
         router.push("/select-organization");
       } else if (!user && !isAuthLoading) {
-        router.push("/auth/login"); // Redirect to login if not authenticated
+        router.push("/auth/login");
       }
     }
   }, [user, selectedOrganization, router, isAuthLoading, isOrgLoading]);
@@ -40,7 +37,6 @@ const Home: NextPage = () => {
     );
   }
 
-  // This return statement is only reached if there's an issue or if the user is not properly authenticated/authorized
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
       <section className="container mx-auto px-4 py-20 relative">

@@ -4,7 +4,7 @@ import {
   updateSession,
   listGoals,
   updateGoal,
-  updateGoalProgress,
+  // updateGoalProgress,
   listOrganizations,
 } from "../controllers/coach.controller.js";
 import { Router } from "express";
@@ -21,9 +21,9 @@ router.patch("/sessions/:sessionId", auth, updateSession);
 // List goals
 router.get("/goals", auth, listGoals);
 // Update goal
-router.put("/goals/:goalId", auth, updateGoal);
+// router.put("/goals/:goalId", auth, updateGoal);
 // Update goal progress
-router.patch("/goals/:goalId", auth, updateGoalProgress);
+router.patch("/goals/:goalId", auth, updateGoal);
 // list organizations
 router.get("/organizations", auth, listOrganizations);
 

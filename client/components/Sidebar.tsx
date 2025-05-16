@@ -42,7 +42,6 @@ const Sidebar = () => {
   const { pathname } = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-  console.log("selectedOrganization from sidebar", selectedOrganization);
 
   const menuItems = [
     {

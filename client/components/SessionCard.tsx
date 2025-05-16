@@ -33,7 +33,7 @@ interface SessionCardProps {
 
 export const SessionCard = ({ session, onStatusChange }: SessionCardProps) => {
   const { user } = useAuth();
-  const isCoach = user?.role === "coach";
+  const isCoach = user?.organizations.role === "coach";
 
   const handleStatusChange = async (newStatus: string) => {
     if (newStatus === session.status) return;
