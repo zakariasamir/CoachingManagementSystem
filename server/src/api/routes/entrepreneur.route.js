@@ -3,6 +3,7 @@ import {
   listSessions,
   listGoals,
   updateGoal,
+  listOrganizations
 } from "../controllers/entrepreneur.controller.js";
 import { Router } from "express";
 import authenticate from "../middlewares/auth.middleware.js";
@@ -17,5 +18,7 @@ router.get("/sessions", auth, listSessions);
 router.get("/goals", auth, listGoals);
 // Update goal
 router.put("/goals/:goalId", auth, updateGoal);
+// List organizations
+router.get("/organizations", auth, listOrganizations);
 
 export default router;

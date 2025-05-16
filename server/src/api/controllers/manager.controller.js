@@ -36,7 +36,23 @@ const getDashboardStats = async (req, res) => {
 const listOrganizations = async (req, res) => {
   try {
     const organizations = await Organization.find();
-    res.status(200).json(organizations);
+    const orgUsers = await OrganizationUser.find({
+      userId: req.user.userId,
+      status: "active",
+    }).populate("organizationId", "name isSelected");
+    res.status(200).json(
+      organizations.map((org) => {
+        const orgUser = orgUsers.find(
+          (ou) => ou.organizationId._id.toString() === org._id.toString()
+        );
+        return {
+          id: org._id,
+          name: org.name,
+          isSelected: org.isSelected,
+          role: orgUser ? orgUser.role : null, // Access role directly
+        };
+      })
+    );
   } catch (error) {
     res.status(500).json({
       message: "Error fetching organizations",

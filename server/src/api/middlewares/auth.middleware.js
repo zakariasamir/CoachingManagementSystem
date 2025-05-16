@@ -21,38 +21,36 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    // Get organizationId from query params or request body
-    const organizationId = req.query.organizationId || null;
-    // If no organizationId is provided, get the user's default organization
-
-    if (!organizationId) {
-      // const user = await OrganizationUser.findOne({
-      //   userId: decoded.id,
-      //   status: "active",
-      // });
-      // return res.status(200).json(user);
-      return next();
-    }
-
-    // Find user's role in the specific organization
-    const orgUser = await OrganizationUser.findOne({
+    // Find the selected organization for the user
+    // const selectedOrgUser = await OrganizationUser.findOne({
+    //   userId: decoded.id,
+    // }).populate({
+    //   path: "organizationId",
+    //   match: { isSelected: true },
+    // });
+    const orgRoles = await OrganizationUser.find({
       userId: decoded.id,
-      organizationId,
       status: "active",
-    });
+    }).populate("organizationId", "name isSelected");
 
-    if (!orgUser) {
+    // Find the selected organization
+    const selectedOrg = orgRoles.find((or) => or.organizationId.isSelected);
+
+    console.log(
+      "Selected organization user:",
+      selectedOrg
+    );
+
+    if (!selectedOrg || !selectedOrg.organizationId) {
       return res.status(403).json({
         success: false,
-        message: "User does not belong to this organization",
+        message: "No selected organization found for this user.",
       });
     }
-
-    // Add both user info and organization context to request
     req.user = {
       userId: decoded.id,
-      organizationId,
-      role: orgUser.role, // This is the role specific to the organization
+      organizationId: selectedOrg.organizationId._id,
+      role: selectedOrg.role,
     };
 
     next();
@@ -60,7 +58,7 @@ const authenticate = async (req, res, next) => {
     console.error("Authentication failed:", error.message);
     return res.status(401).json({
       success: false,
-      message: "Invalid token hello",
+      message: "Invalid token",
     });
   }
 };
