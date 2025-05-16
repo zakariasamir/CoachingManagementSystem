@@ -108,9 +108,9 @@ const listGoals = async (req, res) => {
   const { userId } = req.user;
 
   try {
-    const goals = await Goal.find({ 
+    const goals = await Goal.find({
       entrepreneurId: userId,
-      organizationId 
+      organizationId,
     })
       .populate("coachId", "firstName lastName email")
       .populate("organizationId", "name");
@@ -118,9 +118,9 @@ const listGoals = async (req, res) => {
     res.status(200).json(goals);
   } catch (error) {
     console.error("Error in listGoals:", error);
-    res.status(500).json({ 
-      message: "Error fetching goals", 
-      error: error.message 
+    res.status(500).json({
+      message: "Error fetching goals",
+      error: error.message,
     });
   }
 };
@@ -149,24 +149,19 @@ const updateGoal = async (req, res) => {
 };
 const listOrganizations = async (req, res) => {
   try {
-    const organizations = await Organization.find();
     const orgUsers = await OrganizationUser.find({
       userId: req.user.userId,
       status: "active",
     }).populate("organizationId", "name isSelected");
-    res.status(200).json(
-      organizations.map((org) => {
-        const orgUser = orgUsers.find(
-          (ou) => ou.organizationId._id.toString() === org._id.toString()
-        );
-        return {
-          id: org._id,
-          name: org.name,
-          isSelected: org.isSelected,
-          role: orgUser ? orgUser.role : null, // Access role directly
-        };
-      })
-    );
+
+    const userOrganizations = orgUsers.map((orgUser) => ({
+      id: orgUser.organizationId._id,
+      name: orgUser.organizationId.name,
+      isSelected: orgUser.isSelected,
+      role: orgUser.role,
+    }));
+
+    res.status(200).json(userOrganizations);
   } catch (error) {
     res.status(500).json({
       message: "Error fetching organizations",
@@ -175,4 +170,10 @@ const listOrganizations = async (req, res) => {
   }
 };
 
-export { getDashboardStats, listSessions, listGoals, updateGoal, listOrganizations };
+export {
+  getDashboardStats,
+  listSessions,
+  listGoals,
+  updateGoal,
+  listOrganizations,
+};

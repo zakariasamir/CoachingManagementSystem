@@ -13,6 +13,7 @@ const organizationUserSchema = new Schema({
     required: true,
   },
   status: { type: String, enum: ["active", "inactive"], default: "active" },
+  isSelected: { type: Boolean, default: false },
   joinedAt: { type: Date, default: Date.now },
 });
 

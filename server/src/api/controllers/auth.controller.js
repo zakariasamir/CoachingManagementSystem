@@ -74,10 +74,10 @@ const login = async (req, res) => {
     let orgRoles = await OrganizationUser.find({
       userId: user._id,
       status: "active",
-    }).populate("organizationId", "name isSelected");
+    }).populate("organizationId", "name");
 
     // Check if user has a selected organization
-    let selectedOrg = orgRoles.find((or) => or.organizationId.isSelected);
+    let selectedOrg = orgRoles.find((or) => or.isSelected);
 
     // If no selected organization, this is the user's first login
     if (!selectedOrg && orgRoles.length > 0) {
@@ -85,21 +85,21 @@ const login = async (req, res) => {
       selectedOrg = orgRoles[0];
 
       // Update the organization to isSelected: true
-      await Organization.updateMany(
-        { _id: { $in: orgRoles.map((or) => or.organizationId._id) } }, // All orgs for this user
-        { isSelected: false } // Set all to false first
+      await OrganizationUser.updateMany(
+        { userId: user._id },
+        { isSelected: false }
       );
-      await Organization.updateOne(
-        { _id: selectedOrg.organizationId._id },
-        { isSelected: true } // Set the first one to true
+      await OrganizationUser.updateOne(
+        { userId: user._id, organizationId: selectedOrg.organizationId._id },
+        { isSelected: true }
       );
 
       // Refresh orgRoles after update
       orgRoles = await OrganizationUser.find({
         userId: user._id,
         status: "active",
-      }).populate("organizationId", "name isSelected");
-      selectedOrg = orgRoles.find((or) => or.organizationId.isSelected);
+      }).populate("organizationId", "name");
+      selectedOrg = orgRoles.find((or) => or.isSelected);
     }
 
     const token = jwt.sign(
@@ -123,7 +123,6 @@ const login = async (req, res) => {
     });
 
     res.status(200).json({
-      message: "Login successful",
       user: {
         userId: user._id,
         firstName: user.firstName,
@@ -133,7 +132,7 @@ const login = async (req, res) => {
           ? {
               id: selectedOrg.organizationId._id,
               name: selectedOrg.organizationId.name,
-              isSelected: selectedOrg.organizationId.isSelected,
+              isSelected: selectedOrg.isSelected,
               role: selectedOrg.role,
             }
           : null,
@@ -161,15 +160,17 @@ const checkAuthStatus = async (req, res) => {
     }
 
     // Get user's organization roles
+    // In the checkAuthStatus function, update the orgRoles query:
     const orgRoles = await OrganizationUser.find({
       userId: user._id,
       status: "active",
-    }).populate("organizationId", "name isSelected");
+    }).populate("organizationId", "name");
 
     // Find the selected organization
-    const selectedOrg = orgRoles.find((or) => or.organizationId.isSelected);
+    const selectedOrg = orgRoles.find((or) => or.isSelected);
+    console.log("Selected Org:", selectedOrg);
 
-    res.json({
+    res.status(200).json({
       user: {
         userId: user._id,
         firstName: user.firstName,
@@ -179,7 +180,7 @@ const checkAuthStatus = async (req, res) => {
           ? {
               id: selectedOrg.organizationId._id,
               name: selectedOrg.organizationId.name,
-              isSelected: selectedOrg.organizationId.isSelected,
+              isSelected: selectedOrg.isSelected,
               role: selectedOrg.role,
             }
           : null,
@@ -200,7 +201,7 @@ const switchOrganization = async (req, res) => {
       userId,
       organizationId,
       status: "active",
-    }).populate("organizationId", "name isSelected");
+    }).populate("organizationId", "name");
 
     if (!orgUser) {
       return res.status(403).json({
@@ -208,36 +209,30 @@ const switchOrganization = async (req, res) => {
       });
     }
 
-    // Update isSelected in Organization model
-    await Organization.updateMany(
-      {
-        _id: {
-          $in: (
-            await OrganizationUser.find({ userId })
-          ).map((ou) => ou.organizationId),
-        },
-      },
-      { isSelected: false }
+    // Update isSelected in OrganizationUser model
+    await OrganizationUser.updateMany(
+      { userId }, // Find all organizations for this user
+      { isSelected: false } // Set all to false first
     );
-    await Organization.updateOne({ _id: organizationId }, { isSelected: true });
 
-    // Get updated orgRoles
-    const orgRoles = await OrganizationUser.find({
-      userId: userId,
-      status: "active",
-    }).populate("organizationId", "name isSelected");
-
-    const selectedOrg = orgRoles.find(
-      (or) => or.organizationId._id.toString() === organizationId
+    await OrganizationUser.updateOne(
+      { userId, organizationId },
+      { isSelected: true } // Set the selected one to true
     );
+
+    // Get updated orgUser
+    const updatedOrgUser = await OrganizationUser.findOne({
+      userId,
+      organizationId,
+    }).populate("organizationId", "name");
 
     res.status(200).json({
       message: "Organization switched successfully",
       organization: {
-        id: selectedOrg.organizationId._id,
-        name: selectedOrg.organizationId.name,
-        isSelected: selectedOrg.organizationId.isSelected,
-        role: selectedOrg.role,
+        id: updatedOrgUser.organizationId._id,
+        name: updatedOrgUser.organizationId.name,
+        isSelected: updatedOrgUser.isSelected,
+        role: updatedOrgUser.role,
       },
     });
   } catch (error) {

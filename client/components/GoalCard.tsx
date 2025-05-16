@@ -9,20 +9,30 @@ interface GoalCardProps {
     _id: string;
     title: string;
     description: string;
-    status: "not_started" | "in_progress" | "completed";
     progress: number;
+    status: "not-started" | "in-progress" | "completed";
     entrepreneurId: {
+      _id: string;
       firstName: string;
       lastName: string;
       email: string;
     };
-    organizationId: {
+    organizationId: string;
+    coachId: {
       _id: string;
-      name: string;
+      firstName: string;
+      lastName: string;
+      email: string;
     };
-    coachId: string;
+    updates: Array<{
+      updatedBy?: string; // Make optional as it's not always present
+      content?: string; // Make optional as it's not always present
+      timestamp?: string; // Make optional as it's not always present
+    }>;
+    createdAt: string;
+    __v: number;
   };
-  onProgressUpdate: (progress: number) => Promise<void>;
+  onProgressUpdate?: (progress: number) => Promise<void>;
 }
 
 export function GoalCard({ goal, onProgressUpdate }: GoalCardProps) {
@@ -35,7 +45,9 @@ export function GoalCard({ goal, onProgressUpdate }: GoalCardProps) {
     if (progress === goal.progress) return;
     setIsUpdating(true);
     try {
-      await onProgressUpdate(progress);
+      if (onProgressUpdate) {
+        await onProgressUpdate(progress);
+      }
     } finally {
       setIsUpdating(false);
     }

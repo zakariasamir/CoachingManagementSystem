@@ -1,4 +1,12 @@
-import {getDashboardStats, listSessions, updateSession, listGoals, updateGoal, updateGoalProgress } from "../controllers/coach.controller.js";
+import {
+  getDashboardStats,
+  listSessions,
+  updateSession,
+  listGoals,
+  updateGoal,
+  updateGoalProgress,
+  listOrganizations,
+} from "../controllers/coach.controller.js";
 import { Router } from "express";
 import authenticate from "../middlewares/auth.middleware.js";
 import authorize from "../middlewares/role.middleware.js";
@@ -16,5 +24,7 @@ router.get("/goals", auth, listGoals);
 router.put("/goals/:goalId", auth, updateGoal);
 // Update goal progress
 router.patch("/goals/:goalId", auth, updateGoalProgress);
+// list organizations
+router.get("/organizations", auth, listOrganizations);
 
 export default router;

@@ -9,23 +9,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import GoalForm from "@/components/forms/GoalForm";
 import { toast } from "sonner";
 
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
 interface Goal {
   _id: string;
   title: string;
   description: string;
-  status: "not_started" | "in_progress" | "completed";
   progress: number;
-  entrepreneurId: User;
-  coachId: User;
+  status: "not-started" | "in-progress" | "completed";
+  entrepreneurId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   organizationId: string;
+  coachId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  updates: Array<{
+    updatedBy?: string;
+    content?: string;
+    timestamp?: string;
+  }>;
   createdAt: string;
+  __v: number;
 }
 
 async function fetchGoals(url: string) {
@@ -106,7 +115,7 @@ export default function ManagerGoals() {
             </div>
           ) : (
             goals.map((goal) => (
-              <GoalCard key={goal._id} goal={goal} onUpdate={mutate} />
+              <GoalCard key={goal._id} goal={goal} />
             ))
           )}
         </div>

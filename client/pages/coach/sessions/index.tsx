@@ -67,8 +67,8 @@ const mapSessionToCardProps = (session: Session): SessionCardProps => {
 
 export default function CoachSessions() {
   // const { data } = useAuth();
-  const { currentOrganization } = useOrganization();
-  const organizationId = currentOrganization?.id;
+  const { selectedOrganization } = useOrganization();
+  const organizationId = selectedOrganization?.id;
   const {
     data: sessions,
     error,

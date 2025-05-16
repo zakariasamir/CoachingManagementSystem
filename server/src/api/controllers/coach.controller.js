@@ -1,5 +1,7 @@
 import { SessionParticipant } from "../models/sessionParticipant.model.js";
 import { SessionOrganization } from "../models/sessionOrganization.model.js";
+import { Organization } from "../models/organization.model.js";
+import { OrganizationUser } from "../models/organizationUser.model.js";
 import { Goal } from "../models/goal.model.js";
 import { Session } from "../models/session.model.js";
 
@@ -89,7 +91,7 @@ const updateSession = async (req, res) => {
       sessionId,
       { status },
       { new: true }
-    )
+    );
     if (!session) {
       return res.status(404).json({ message: "Session not found" });
     }
@@ -159,7 +161,59 @@ const updateGoalProgress = async (req, res) => {
       .status(500)
       .json({ message: "Error updating goal progress", error: error.message });
   }
-}
+};
+// const listOrganizations = async (req, res) => {
+//   try {
+//     const organizations = await Organization.find();
+//     const orgUsers = await OrganizationUser.find({
+//       userId: req.user.userId,
+//       status: "active",
+//     }).populate("organizationId", "name isSelected");
+//     res.status(200).json(
+//       organizations.map((org) => {
+//         const orgUser = orgUsers.find(
+//           (ou) => ou.organizationId._id.toString() === org._id.toString()
+//         );
+//         return {
+//           id: org._id,
+//           name: org.name,
+//           isSelected: org.isSelected,
+//           role: orgUser ? orgUser.role : null, // Access role directly
+//         };
+//       })
+//     );
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error fetching organizations",
+//       error: error.message,
+//     });
+//   }
+// };
+
+const listOrganizations = async (req, res) => {
+  try {
+    // First get the user's organization memberships
+    const orgUsers = await OrganizationUser.find({
+      userId: req.user.userId,
+      status: "active",
+    }).populate("organizationId", "name isSelected");
+
+    // Map the organizations directly from the orgUsers
+    const userOrganizations = orgUsers.map((orgUser) => ({
+      id: orgUser.organizationId._id,
+      name: orgUser.organizationId.name,
+      isSelected: orgUser.isSelected,
+      role: orgUser.role,
+    }));
+
+    res.status(200).json(userOrganizations);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching organizations",
+      error: error.message,
+    });
+  }
+};
 
 export {
   getDashboardStats,
@@ -168,4 +222,5 @@ export {
   listGoals,
   updateGoal,
   updateGoalProgress,
+  listOrganizations,
 };

@@ -148,7 +148,7 @@ const Login = () => {
             </Button>
 
             <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don t have an account?{" "}
               <Button
                 variant="link"
                 className="p-0 text-primary hover:underline"

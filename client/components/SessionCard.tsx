@@ -26,7 +26,7 @@ interface SessionCardProps {
     coach: string;
     entrepreneur: string;
   };
-  onStatusChange: (
+  onStatusChange?: (
     newStatus: "scheduled" | "completed" | "cancelled"
   ) => Promise<void>;
 }
@@ -37,7 +37,9 @@ export const SessionCard = ({ session, onStatusChange }: SessionCardProps) => {
 
   const handleStatusChange = async (newStatus: string) => {
     if (newStatus === session.status) return;
-    await onStatusChange(newStatus as "scheduled" | "completed" | "cancelled");
+    if (onStatusChange) {
+      await onStatusChange(newStatus as "scheduled" | "completed" | "cancelled");
+    }
   };
 
   return (

@@ -12,21 +12,25 @@ interface Goal {
   progress: number;
   status: "not-started" | "in-progress" | "completed";
   entrepreneurId: {
+    _id: string;
     firstName: string;
     lastName: string;
     email: string;
   };
-  organizationId: {
+  organizationId: string;
+  coachId: {
     _id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   };
-  coachId: string;
   updates: Array<{
-    updatedBy: string;
-    content: string;
-    timestamp: string;
+    updatedBy?: string;
+    content?: string;
+    timestamp?: string;
   }>;
   createdAt: string;
+  __v: number;
 }
 
 async function fetchGoals(url: string) {

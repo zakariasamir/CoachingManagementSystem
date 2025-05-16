@@ -183,7 +183,9 @@ export default function Users() {
           isOpen={addToOrgFormOpen}
           onClose={() => setAddToOrgFormOpen(false)}
           userId={selectedUserId}
-          onSuccess={mutate}
+          onSuccess={() => {
+            mutate();
+          }}
         />
       </div>
     </ManagerLayout>

@@ -33,26 +33,51 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+// const listOrganizations = async (req, res) => {
+//   try {
+//     const organizations = await Organization.find();
+//     const orgUsers = await OrganizationUser.find({
+//       userId: req.user.userId,
+//       status: "active",
+//     }).populate("organizationId", "name isSelected");
+//     res.status(200).json(
+//       organizations.map((org) => {
+//         const orgUser = orgUsers.find(
+//           (ou) => ou.organizationId._id.toString() === org._id.toString()
+//         );
+//         return {
+//           id: org._id,
+//           name: org.name,
+//           isSelected: org.isSelected,
+//           role: orgUser ? orgUser.role : null, // Access role directly
+//         };
+//       })
+//     );
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error fetching organizations",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const listOrganizations = async (req, res) => {
   try {
-    const organizations = await Organization.find();
+    // First get the user's organization memberships
     const orgUsers = await OrganizationUser.find({
       userId: req.user.userId,
       status: "active",
     }).populate("organizationId", "name isSelected");
-    res.status(200).json(
-      organizations.map((org) => {
-        const orgUser = orgUsers.find(
-          (ou) => ou.organizationId._id.toString() === org._id.toString()
-        );
-        return {
-          id: org._id,
-          name: org.name,
-          isSelected: org.isSelected,
-          role: orgUser ? orgUser.role : null, // Access role directly
-        };
-      })
-    );
+
+    // Map the organizations directly from the orgUsers
+    const userOrganizations = orgUsers.map((orgUser) => ({
+      id: orgUser.organizationId._id,
+      name: orgUser.organizationId.name,
+      isSelected: orgUser.isSelected,
+      role: orgUser.role,
+    }));
+
+    res.status(200).json(userOrganizations);
   } catch (error) {
     res.status(500).json({
       message: "Error fetching organizations",

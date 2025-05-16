@@ -2,7 +2,6 @@ import { Schema, model } from "mongoose";
 
 const organizationSchema = new Schema({
   name: { type: String, required: true },
-  isSelected: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

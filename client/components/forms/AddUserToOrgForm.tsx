@@ -26,7 +26,7 @@ interface AddUserToOrgFormProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
-  onSuccess: () => Promise<void>;
+  onSuccess?: () => void;
 }
 
 async function fetchOrganizations(url: string) {
@@ -70,7 +70,9 @@ export function AddUserToOrgForm({
         { withCredentials: true }
       );
 
-      await onSuccess();
+      if (onSuccess) {
+        await onSuccess();
+      }
       toast.success("User added to organization successfully");
       onClose();
       setSelectedOrg("");
