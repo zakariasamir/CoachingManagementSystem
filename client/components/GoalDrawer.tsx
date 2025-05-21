@@ -5,7 +5,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Goal {
   _id: string;
@@ -45,25 +44,25 @@ export function GoalDrawer({ goal, isOpen, onClose }: GoalDrawerProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "text-green-600";
+        return "text-green-600 dark:text-green-400";
       case "in-progress":
-        return "text-blue-600";
+        return "text-blue-600 dark:text-blue-400";
       default:
-        return "text-gray-600";
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent className="w-full">
-        <div className=" w-full overflow-scroll rounded-lg bg-white shadow-lg">
+        <div className="w-full h-full overflow-auto">
           <DrawerHeader className="text-left">
             <DrawerTitle>{goal.title}</DrawerTitle>
             <DrawerDescription>
               Created on {new Date(goal.createdAt).toLocaleDateString()}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="h-full w-full px-4 overflow-y-auto" style={{ width: "100%" }}>
+          <div className="h-[calc(100vh-8rem)] px-4">
             <div className="space-y-6 pb-6">
               <div>
                 <h3 className="text-sm font-medium mb-2">Entrepreneur</h3>
@@ -91,7 +90,7 @@ export function GoalDrawer({ goal, isOpen, onClose }: GoalDrawerProps) {
               <div>
                 <h3 className="text-sm font-medium mb-2">Progress</h3>
                 <div className="space-y-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                  <div className="w-full bg-secondary rounded-full h-2.5">
                     <div
                       className="bg-primary h-2.5 rounded-full transition-all"
                       style={{ width: `${goal.progress}%` }}

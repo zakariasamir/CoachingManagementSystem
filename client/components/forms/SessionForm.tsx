@@ -34,14 +34,22 @@ interface SessionFormData {
   endTime: string;
   coachId: string;
   entrepreneurId: string;
-  notes: string;
+  notes?: string;
+  price: number;
+  organizationId?: string;
 }
 
 interface SessionFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: SessionFormData) => Promise<void>;
+  onSubmit: (
+    data: SessionFormData & { organizationId: string }
+  ) => Promise<void>;
   organizationId: string;
+}
+
+interface ValidationErrors {
+  [key: string]: string;
 }
 
 async function fetchUsers(url: string) {
@@ -62,22 +70,20 @@ const SessionForm = ({
     coachId: "",
     entrepreneurId: "",
     notes: "",
+    price: 0,
   });
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const { data: coaches } = useSWR<User[]>(
     organizationId
-      ? `${
-          process.env.NEXT_PUBLIC_VITE_BASE_URL
-        }/users?organizationId=${organizationId}&role=coach`
+      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/users?organizationId=${organizationId}&role=coach`
       : null,
     fetchUsers
   );
 
   const { data: entrepreneurs } = useSWR<User[]>(
     organizationId
-      ? `${
-          process.env.NEXT_PUBLIC_VITE_BASE_URL
-        }/users?organizationId=${organizationId}&role=entrepreneur`
+      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/users?organizationId=${organizationId}&role=entrepreneur`
       : null,
     fetchUsers
   );
@@ -88,13 +94,36 @@ const SessionForm = ({
       | { target: { name: string; value: string } }
   ) => {
     const { name, value } = e.target;
-    setSessionData((prev) => ({ ...prev, [name]: value }));
+    setSessionData((prev) => ({
+      ...prev,
+      [name]: name === "price" ? Number(value) : value,
+    }));
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(sessionData);
+    setErrors({});
+    try {
+      const submissionData = {
+        ...sessionData,
+        organizationId,
+      };
+      await onSubmit(submissionData);
+      onClose();
+    } catch (error: any) {
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      } else {
+        console.error(
+          "Session creation error:",
+          error.response?.data || error.message
+        );
+      }
+    }
   };
+
+  // Helper function to get error message for a field
+  const getErrorMessage = (field: string) => errors[field];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,7 +142,11 @@ const SessionForm = ({
               onChange={handleChange}
               placeholder="Enter session title"
               required
+              className={errors.title ? "border-red-500" : ""}
             />
+            {errors.title && (
+              <p className="text-sm text-red-500">{errors.title}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -125,7 +158,11 @@ const SessionForm = ({
               value={sessionData.startTime}
               onChange={handleChange}
               required
+              className={errors.startTime ? "border-red-500" : ""}
             />
+            {errors.startTime && (
+              <p className="text-sm text-red-500">{errors.startTime}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -137,7 +174,11 @@ const SessionForm = ({
               value={sessionData.endTime}
               onChange={handleChange}
               required
+              className={errors.endTime ? "border-red-500" : ""}
             />
+            {errors.endTime && (
+              <p className="text-sm text-red-500">{errors.endTime}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -149,7 +190,7 @@ const SessionForm = ({
                 handleChange({ target: { name: "coachId", value } })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.coachId ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select a coach" />
               </SelectTrigger>
               <SelectContent>
@@ -160,6 +201,9 @@ const SessionForm = ({
                 ))}
               </SelectContent>
             </Select>
+            {errors.coachId && (
+              <p className="text-sm text-red-500">{errors.coachId}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -171,7 +215,9 @@ const SessionForm = ({
                 handleChange({ target: { name: "entrepreneurId", value } })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={errors.entrepreneurId ? "border-red-500" : ""}
+              >
                 <SelectValue placeholder="Select an entrepreneur" />
               </SelectTrigger>
               <SelectContent>
@@ -182,6 +228,28 @@ const SessionForm = ({
                 ))}
               </SelectContent>
             </Select>
+            {errors.entrepreneurId && (
+              <p className="text-sm text-red-500">{errors.entrepreneurId}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="price">Price</Label>
+            <Input
+              id="price"
+              name="price"
+              type="number"
+              min="0"
+              step="5"
+              value={sessionData.price}
+              onChange={handleChange}
+              placeholder="Enter session price"
+              required
+              className={errors.price ? "border-red-500" : ""}
+            />
+            {errors.price && (
+              <p className="text-sm text-red-500">{errors.price}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -192,7 +260,11 @@ const SessionForm = ({
               value={sessionData.notes}
               onChange={handleChange}
               placeholder="Add any session notes..."
+              className={errors.notes ? "border-red-500" : ""}
             />
+            {errors.notes && (
+              <p className="text-sm text-red-500">{errors.notes}</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full">

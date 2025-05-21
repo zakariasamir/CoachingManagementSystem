@@ -47,7 +47,7 @@ export function AddUserToOrgForm({
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: organizations } = useSWR(
-    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/manager/organizations`,
+    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/manager/organizations/all`,
     fetchOrganizations
   );
 

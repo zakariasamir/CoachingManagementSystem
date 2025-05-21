@@ -1,6 +1,7 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Document, Query } from "mongoose";
+import { IGoal } from "../types/index";
 
-const goalSchema = new Schema({
+const goalSchema = new Schema<IGoal>({
   entrepreneurId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   coachId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   organizationId: {
@@ -26,10 +27,10 @@ const goalSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-goalSchema.pre(['save', 'findOneAndUpdate'], function(next) {
-  if (this.getUpdate) {
-    const update = this.getUpdate();
-    if (update.progress !== undefined) {
+goalSchema.pre(["save", "findOneAndUpdate"], function (next) {
+  if ("getUpdate" in this) {
+    const update = (this as Query<any, any>).getUpdate() as any;
+    if (update?.progress !== undefined) {
       if (update.progress === 100) {
         update.status = "completed";
       } else if (update.progress > 0) {
@@ -39,15 +40,16 @@ goalSchema.pre(['save', 'findOneAndUpdate'], function(next) {
       }
     }
   } else {
-    if (this.progress === 100) {
-      this.status = "completed";
-    } else if (this.progress > 0) {
-      this.status = "in-progress";
-    } else if (this.progress === 0) {
-      this.status = "not-started";
+    const doc = this as Document & IGoal;
+    if (doc.progress === 100) {
+      doc.status = "completed";
+    } else if (doc.progress > 0) {
+      doc.status = "in-progress";
+    } else if (doc.progress === 0) {
+      doc.status = "not-started";
     }
   }
   next();
 });
 
-export const Goal = model("Goal", goalSchema);
+export const Goal = model<IGoal>("Goal", goalSchema);

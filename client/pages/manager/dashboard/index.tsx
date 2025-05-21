@@ -28,7 +28,7 @@ export default function ManagerDashboard() {
     isLoading,
   } = useSWR<Stats>(
     organizationId
-      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/${selectedOrganization.role}/dashboard?organizationId=${organizationId}`
+      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/${selectedOrganization.role}/dashboard/${organizationId}`
       : null,
     fetchStats,
     {

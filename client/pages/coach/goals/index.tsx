@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import CoachLayout from "@/layouts/CoachLayouts";
 import { UpdateGoalDialog } from "@/components/UpdateGoalDialog";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface Goal {
   _id: string;
@@ -40,16 +41,22 @@ async function fetchGoals(url: string) {
 }
 
 export default function CoachGoals() {
+  const { selectedOrganization, isLoading: isOrgLoading } = useOrganization();
+  const organizationId = selectedOrganization?.id;
   const {
     data: goals,
     error,
     mutate,
   } = useSWR(
-    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/goals`,
+    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/goals?organizationId=${organizationId}`,
     fetchGoals
   );
 
-  const handleGoalUpdate = async (goalId: string, progress: number, note: string) => {
+  const handleGoalUpdate = async (
+    goalId: string,
+    progress: number,
+    note: string
+  ) => {
     try {
       await axios.patch(
         `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/goals/${goalId}`,

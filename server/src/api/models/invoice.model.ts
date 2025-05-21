@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { IInvoice } from "../types/index";
 
-const invoiceSchema = new Schema({
+const invoiceSchema = new Schema<IInvoice>({
   paymentId: { type: Schema.Types.ObjectId, ref: "Payment", required: true },
   invoiceNumber: { type: String, required: true, unique: true },
   issuedTo: { type: Schema.Types.ObjectId, ref: "User", required: true },
@@ -17,4 +18,4 @@ const invoiceSchema = new Schema({
   issuedAt: { type: Date, default: Date.now },
 });
 
-export const Invoice = model("Invoice", invoiceSchema);
+export const Invoice = model<IInvoice>("Invoice", invoiceSchema);

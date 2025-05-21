@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/Icons";
 import { cn } from "@/lib/utils";
 import { mutate } from "swr";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface LoginResponse {
   user: {
@@ -26,7 +27,7 @@ interface LoginResponse {
       id: string;
       name: string;
       role: string;
-      isSelected: boolean;
+      selected: boolean;
     };
   };
   message: string;
@@ -43,6 +44,7 @@ async function loginRequest(
 }
 
 const Login = () => {
+  const { isLoading: isOrgLoading } = useOrganization();
   const router = useRouter();
   const [credentials, setCredentials] = useState({
     email: "",
@@ -54,16 +56,15 @@ const Login = () => {
     loginRequest,
     {
       onSuccess: async (data) => {
-        console.log("Login successful:", data);
-        if (data.user.organizations) {
-          // const organizations = data.user.organizations;
-          // Store the first organization ID in localStorage
-          // localStorage.setItem("currentOrganizationId", organizations[0].id);
-          // Redirect to the dashboard of the first organization
+        await mutate(
+          `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/auth/check-auth-status`,
+          { user: data.user },
+          false
+        );
+        if (data.user.organizations && data.user.organizations.selected) {
+          console.log("Login successful:", data);
           router.push(`/${data.user.organizations.role}/dashboard`);
         }
-        // Mutate the auth state to update the user data
-        await mutate("/auth/check-auth-status");
       },
     }
   );
@@ -78,8 +79,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const userData = await trigger(credentials);
-      mutate("/auth", userData, false);
+      await trigger(credentials);
     } catch (err) {
       console.error("Login failed:", err);
     }
@@ -141,7 +141,7 @@ const Login = () => {
               )}
               disabled={isMutating}
             >
-              {isMutating && (
+              {isMutating && isOrgLoading && (
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               )}
               Sign In

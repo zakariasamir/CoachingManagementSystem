@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import useSWR from "swr";
 import axios from "axios";
 import CoachLayout from "@/layouts/CoachLayouts";
+import { useOrganization } from "@/hooks/useOrganization";
 
 interface DashboardStats {
   totalSessions: number;
@@ -18,8 +19,11 @@ async function fetchStats(url: string) {
 }
 
 export default function CoachDashboard() {
+  const { selectedOrganization, isLoading: isOrgLoading } = useOrganization();
+  const organizationId = selectedOrganization?.id;
+
   const { data: stats, error } = useSWR(
-    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/dashboard`,
+    `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/${selectedOrganization?.role}/dashboard?organizationId=${organizationId}`,
     fetchStats
   );
 

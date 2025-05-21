@@ -1,46 +1,45 @@
-import { SessionParticipant } from "../models/sessionParticipant.model.js";
-import { Goal } from "../models/goal.model.js";
-import { Session } from "../models/session.model.js";
-import { SessionOrganization } from "../models/sessionOrganization.model.js";
-import { Organization } from "../models/organization.model.js";
-import { OrganizationUser } from "../models/organizationUser.model.js";
+import { Request, Response } from "express";
+import { SessionParticipant } from "../models/sessionParticipant.model";
+import { Goal } from "../models/goal.model";
+import { Session } from "../models/session.model";
+import { SessionOrganization } from "../models/sessionOrganization.model";
+import { Organization } from "../models/organization.model";
+import { OrganizationUser } from "../models/organizationUser.model";
+import { AuthenticatedRequest, IOrganization } from "../types/index";
 
-const getDashboardStats = async (req, res) => {
+const getDashboardStats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { organizationId } = req.query;
-  const { userId } = req.user;
+  const { userId } = (req as AuthenticatedRequest).user!;
 
   try {
-    // Get all entrepreneur's sessions in the organization
     const entrepreneurSessions = await SessionParticipant.find({
       userId,
       role: "entrepreneur",
     });
     const sessionIds = entrepreneurSessions.map((cs) => cs.sessionId);
 
-    // Filter sessions by organization
     const orgSessions = await SessionOrganization.find({
       organizationId,
       sessionId: { $in: sessionIds },
     });
     const orgSessionIds = orgSessions.map((os) => os.sessionId);
 
-    // Count total sessions in the organization
     const totalSessions = await Session.countDocuments({
       _id: { $in: orgSessionIds },
     });
 
-    // Get entrepreneur's goals in the organization
     const entrepreneurGoals = await Goal.find({
       entrepreneurId: userId,
       organizationId,
     });
 
-    // Count completed goals
     const completedGoals = entrepreneurGoals.filter(
       (goal) => goal.status === "completed"
     ).length;
 
-    // Count total goals
     const totalGoals = entrepreneurGoals.length;
 
     res.status(200).json({
@@ -53,13 +52,16 @@ const getDashboardStats = async (req, res) => {
     console.error("Dashboard stats error:", error);
     res.status(500).json({
       message: "Error fetching dashboard stats",
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
-const listSessions = async (req, res) => {
-  const { userId } = req.user;
+const listSessions = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { userId } = req.user!;
   const { organizationId } = req.query;
   try {
     const sessionParticipants = await SessionParticipant.find({
@@ -81,11 +83,13 @@ const listSessions = async (req, res) => {
     const participants = await SessionParticipant.find({
       sessionId: { $in: sessionIds },
     }).populate("userId", "firstName lastName email");
+
     const orgSessionIds = orgSessions.map((os) => os.sessionId.toString());
 
     const filteredSessions = sessions.filter((session) =>
       orgSessionIds.includes(session._id.toString())
     );
+
     const sessionsWithParticipants = filteredSessions.map((session) => ({
       ...session.toObject(),
       participants: participants.filter(
@@ -98,14 +102,17 @@ const listSessions = async (req, res) => {
     console.error("Error in listSessions:", error);
     res.status(500).json({
       message: "Error fetching sessions",
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
-const listGoals = async (req, res) => {
+const listGoals = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   const { organizationId } = req.query;
-  const { userId } = req.user;
+  const { userId } = req.user!;
 
   try {
     const goals = await Goal.find({
@@ -120,12 +127,12 @@ const listGoals = async (req, res) => {
     console.error("Error in listGoals:", error);
     res.status(500).json({
       message: "Error fetching goals",
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
-const updateGoal = async (req, res) => {
+const updateGoal = async (req: Request, res: Response): Promise<void> => {
   const { goalId } = req.params;
   const { Progress, status } = req.body;
 
@@ -137,27 +144,33 @@ const updateGoal = async (req, res) => {
     ).populate("coachId", "firstName lastName email");
 
     if (!goal) {
-      return res.status(404).json({ message: "Goal not found" });
+      res.status(404).json({ message: "Goal not found" });
+      return;
     }
 
     res.status(200).json(goal);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating goal", error: error.message });
+    res.status(500).json({
+      message: "Error updating goal",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };
-const listOrganizations = async (req, res) => {
+
+const listOrganizations = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const orgUsers = await OrganizationUser.find({
-      userId: req.user.userId,
+      userId: req.user!.userId,
       status: "active",
-    }).populate("organizationId", "name isSelected");
+    }).populate("organizationId", "name selected");
 
     const userOrganizations = orgUsers.map((orgUser) => ({
       id: orgUser.organizationId._id,
-      name: orgUser.organizationId.name,
-      isSelected: orgUser.isSelected,
+      name: (orgUser.organizationId as IOrganization).name,
+      selected: orgUser.selected,
       role: orgUser.role,
     }));
 
@@ -165,7 +178,7 @@ const listOrganizations = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error fetching organizations",
-      error: error.message,
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

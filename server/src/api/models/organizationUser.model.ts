@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { IOrganizationUser } from "../types/index";
 
-const organizationUserSchema = new Schema({
+const organizationUserSchema = new Schema<IOrganizationUser>({
   organizationId: {
     type: Schema.Types.ObjectId,
     ref: "Organization",
@@ -13,11 +14,11 @@ const organizationUserSchema = new Schema({
     required: true,
   },
   status: { type: String, enum: ["active", "inactive"], default: "active" },
-  isSelected: { type: Boolean, default: false },
+  selected: { type: Boolean, default: false },
   joinedAt: { type: Date, default: Date.now },
 });
 
-export const OrganizationUser = model(
+export const OrganizationUser = model<IOrganizationUser>(
   "OrganizationUser",
   organizationUserSchema
 );

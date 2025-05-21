@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center p-4">
@@ -36,12 +37,20 @@ const Sidebar = () => {
     organizations,
     selectedOrganization,
     switchOrganization,
-    isLoading,
-    error,
+    isLoading: isOrgLoading,
+    error: orgError,
   } = useOrganization();
+  const { user, isLoading: isAuthLoading, isAuthenticated } = useAuth();
   const { pathname } = useRouter();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Handle authentication check
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   const menuItems = [
     {
@@ -73,6 +82,15 @@ const Sidebar = () => {
           },
         ]
       : []),
+    ...(selectedOrganization?.role === "coach"
+      ? [
+          {
+            name: "Sessions Request",
+            path: "/coach/sessionRequest",
+            icon: <Calendar className="h-5 w-5" />,
+          },
+        ]
+      : []),
   ];
 
   const handleOrganizationChange = async (orgId: string) => {
@@ -101,27 +119,32 @@ const Sidebar = () => {
     return () => document.removeEventListener("toggle-sidebar", handler);
   }, []);
 
-  // Early return with loading state
-  if (isLoading) {
+  // Early return with loading state for both auth and org loading
+  if (isAuthLoading || isOrgLoading) {
     return (
       <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-background">
         <div className="p-4 border-b">
-          <h2 className="font-semibold">Loading Organization</h2>
+          <h2 className="font-semibold">Loading...</h2>
           <LoadingSpinner />
         </div>
       </div>
     );
   }
 
+  // Early return if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   // Early return with error state
-  if (error) {
+  if (orgError) {
     return (
       <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-background">
         <div className="p-4 border-b">
           <div className="text-destructive">
             <h2 className="font-semibold">Error</h2>
             <p className="text-sm">
-              {error.message || "Failed to load organizations"}
+              {orgError.message || "Failed to load organizations"}
             </p>
           </div>
         </div>
@@ -184,7 +207,6 @@ const Sidebar = () => {
                 key={item.name}
                 href={item.path}
                 onClick={() => setIsOpen(false)}
-                legacyBehavior
               >
                 <Button
                   // as="div"

@@ -147,31 +147,33 @@ export default function Users() {
                         {user.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Select
-                        defaultValue={user.status}
-                        onValueChange={(value) =>
-                          handleStatusChange(user._id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedUserId(user._id);
-                          setAddToOrgFormOpen(true);
-                        }}
-                      >
-                        Add to Org
-                      </Button>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          defaultValue={user.status}
+                          onValueChange={(value) =>
+                            handleStatusChange(user._id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button className="h-9"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedUserId(user._id);
+                            setAddToOrgFormOpen(true);
+                          }}
+                        >
+                          Add to Org
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

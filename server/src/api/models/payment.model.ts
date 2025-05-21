@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
+import { IPayment } from "../types/index";
 
-const paymentSchema = new Schema({
+const paymentSchema = new Schema<IPayment>({
   coachId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   organizationId: {
     type: Schema.Types.ObjectId,
@@ -19,4 +20,4 @@ const paymentSchema = new Schema({
   paidAt: { type: Date },
 });
 
-export const Payment = model("Payment", paymentSchema);
+export const Payment = model<IPayment>("Payment", paymentSchema);

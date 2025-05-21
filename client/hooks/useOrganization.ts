@@ -7,7 +7,7 @@ interface Organization {
   id: string;
   name: string;
   role: string;
-  isSelected: boolean;
+  selected: boolean;
 }
 
 const fetcher = async (url: string) => {
@@ -43,7 +43,7 @@ export function useOrganization() {
           (prevOrganizations) =>
             prevOrganizations?.map((org) => ({
               ...org,
-              isSelected: org.id === organizationId,
+              selected: org.id === organizationId,
             })),
           false
         );
@@ -66,7 +66,7 @@ export function useOrganization() {
     [mutateAuth, mutateOrganizations]
   );
 
-  const selectedOrganization = organizations?.find((org) => org.isSelected);
+  const selectedOrganization = organizations?.find((org) => org.selected);
 
   return {
     organizations: organizations || [], // Ensure organizations is always an array

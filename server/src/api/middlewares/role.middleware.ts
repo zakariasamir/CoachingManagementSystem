@@ -1,5 +1,8 @@
-const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
+import { Request, Response, NextFunction } from "express";
+import { AuthenticatedRequest } from "../types/index";
+
+const authorize = (...allowedRoles: string[]) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user || !req.user.role) {
       return res.status(403).json({
         message: "Access denied. Role information missing.",
