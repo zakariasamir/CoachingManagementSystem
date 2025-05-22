@@ -19,32 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
-
-interface SessionFormData {
-  title: string;
-  startTime: string;
-  endTime: string;
-  coachId: string;
-  entrepreneurId: string;
-  notes?: string;
-  price: number;
-  organizationId?: string;
-}
+import { SessionFormData, User } from "@/types/session";
 
 interface SessionFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (
-    data: SessionFormData & { organizationId: string }
-  ) => Promise<void>;
+  onSubmit: (data: SessionFormData) => Promise<void>;
   organizationId: string;
 }
 
@@ -104,11 +84,19 @@ const SessionForm = ({
     e.preventDefault();
     setErrors({});
     try {
-      const submissionData = {
+      await onSubmit({
         ...sessionData,
-        organizationId,
-      };
-      await onSubmit(submissionData);
+      });
+      // Reset form
+      setSessionData({
+        title: "",
+        startTime: "",
+        endTime: "",
+        coachId: "",
+        entrepreneurId: "",
+        notes: "",
+        price: 0,
+      });
       onClose();
     } catch (error: any) {
       if (error.response?.data?.errors) {

@@ -63,7 +63,7 @@ const listSessions = async (
       status: { $in: ["scheduled", "completed", "cancelled"] },
     });
 
-    const orgSessions = await SessionOrganization.find({
+const orgSessions = await SessionOrganization.find({
       organizationId,
       sessionId: { $in: sessionIds },
     });

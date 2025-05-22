@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import SessionForm from "@/components/forms/SessionForm";
 import { toast } from "sonner";
+import { Session, SessionFormData } from "@/types/session";
 
 interface User {
   _id: string;
@@ -26,16 +27,6 @@ interface Participant {
   // user: User;
 }
 
-interface Session {
-  _id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  status: "scheduled" | "completed" | "cancelled";
-  createdAt: string;
-  participants: Participant[];
-}
-
 interface SessionCardProps {
   id: string;
   title: string;
@@ -45,15 +36,6 @@ interface SessionCardProps {
   notes?: string;
   coach: string;
   entrepreneur: string;
-}
-
-interface SessionFormData {
-  title: string;
-  startTime: string;
-  endTime: string;
-  coachId: string;
-  entrepreneurId: string;
-  notes: string;
 }
 
 // Update the mapping logic with better type safety
