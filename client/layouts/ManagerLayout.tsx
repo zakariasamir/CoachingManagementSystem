@@ -1,12 +1,14 @@
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrganization } from "@/hooks/useOrganization";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Loader2 } from "lucide-react";
 
 const ManagerLayout = ({ children }: any) => {
   const { user, isLoading } = useAuth();
+  const { selectedOrganization, isLoading: isOrgLoading } = useOrganization();
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +17,7 @@ const ManagerLayout = ({ children }: any) => {
     }
   }, [user, isLoading, router]);
 
-  if (isLoading) {
+  if (isLoading || isOrgLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

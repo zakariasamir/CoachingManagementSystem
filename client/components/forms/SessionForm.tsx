@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SessionFormData, User } from "@/types/session";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search } from "lucide-react";
 
 interface SessionFormProps {
   isOpen: boolean;
@@ -48,11 +53,12 @@ const SessionForm = ({
     startTime: "",
     endTime: "",
     coachId: "",
-    entrepreneurId: "",
+    entrepreneurIds: [],
     notes: "",
     price: 0,
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: coaches } = useSWR<User[]>(
     organizationId
@@ -68,6 +74,13 @@ const SessionForm = ({
     fetchUsers
   );
 
+  const filteredEntrepreneurs = entrepreneurs?.filter((entrepreneur) => {
+    if (!searchQuery.trim()) return true;
+    const fullName =
+      `${entrepreneur.firstName} ${entrepreneur.lastName}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase().trim());
+  });
+
   const handleChange = (
     e:
       | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -80,6 +93,15 @@ const SessionForm = ({
     }));
   };
 
+  const handleEntrepreneurSelect = (entrepreneurId: string) => {
+    setSessionData((prev) => ({
+      ...prev,
+      entrepreneurIds: prev.entrepreneurIds.includes(entrepreneurId)
+        ? prev.entrepreneurIds.filter((id) => id !== entrepreneurId)
+        : [...prev.entrepreneurIds, entrepreneurId],
+    }));
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -87,13 +109,12 @@ const SessionForm = ({
       await onSubmit({
         ...sessionData,
       });
-      // Reset form
       setSessionData({
         title: "",
         startTime: "",
         endTime: "",
         coachId: "",
-        entrepreneurId: "",
+        entrepreneurIds: [],
         notes: "",
         price: 0,
       });
@@ -101,21 +122,13 @@ const SessionForm = ({
     } catch (error: any) {
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
-      } else {
-        console.error(
-          "Session creation error:",
-          error.response?.data || error.message
-        );
       }
     }
   };
 
-  // Helper function to get error message for a field
-  const getErrorMessage = (field: string) => errors[field];
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Create Session</DialogTitle>
           <DialogDescription>Set up a new coaching session</DialogDescription>
@@ -137,36 +150,38 @@ const SessionForm = ({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="startTime">Start Time</Label>
-            <Input
-              id="startTime"
-              name="startTime"
-              type="datetime-local"
-              value={sessionData.startTime}
-              onChange={handleChange}
-              required
-              className={errors.startTime ? "border-red-500" : ""}
-            />
-            {errors.startTime && (
-              <p className="text-sm text-red-500">{errors.startTime}</p>
-            )}
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Start Time</Label>
+              <Input
+                id="startTime"
+                name="startTime"
+                type="datetime-local"
+                value={sessionData.startTime}
+                onChange={handleChange}
+                required
+                className={errors.startTime ? "border-red-500" : ""}
+              />
+              {errors.startTime && (
+                <p className="text-sm text-red-500">{errors.startTime}</p>
+              )}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="endTime">End Time</Label>
-            <Input
-              id="endTime"
-              name="endTime"
-              type="datetime-local"
-              value={sessionData.endTime}
-              onChange={handleChange}
-              required
-              className={errors.endTime ? "border-red-500" : ""}
-            />
-            {errors.endTime && (
-              <p className="text-sm text-red-500">{errors.endTime}</p>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="endTime">End Time</Label>
+              <Input
+                id="endTime"
+                name="endTime"
+                type="datetime-local"
+                value={sessionData.endTime}
+                onChange={handleChange}
+                required
+                className={errors.endTime ? "border-red-500" : ""}
+              />
+              {errors.endTime && (
+                <p className="text-sm text-red-500">{errors.endTime}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -195,29 +210,79 @@ const SessionForm = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="entrepreneurId">Entrepreneur</Label>
-            <Select
-              name="entrepreneurId"
-              value={sessionData.entrepreneurId}
-              onValueChange={(value) =>
-                handleChange({ target: { name: "entrepreneurId", value } })
-              }
-            >
-              <SelectTrigger
-                className={errors.entrepreneurId ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select an entrepreneur" />
-              </SelectTrigger>
-              <SelectContent>
-                {entrepreneurs?.map((entrepreneur) => (
-                  <SelectItem key={entrepreneur._id} value={entrepreneur._id}>
-                    {`${entrepreneur.firstName} ${entrepreneur.lastName}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.entrepreneurId && (
-              <p className="text-sm text-red-500">{errors.entrepreneurId}</p>
+            <Label>Entrepreneurs</Label>
+            <Card className="p-4">
+              <div className="relative mb-4">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search entrepreneurs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <ScrollArea className="h-[200px] pr-4">
+                <div className="space-y-3">
+                  {filteredEntrepreneurs?.map((entrepreneur) => (
+                    <div
+                      key={entrepreneur._id}
+                      className="flex items-center space-x-3"
+                    >
+                      <div className="flex-1 flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          id={`entrepreneur-${entrepreneur._id}`}
+                          checked={sessionData.entrepreneurIds.includes(
+                            entrepreneur._id
+                          )}
+                          onChange={() =>
+                            handleEntrepreneurSelect(entrepreneur._id)
+                          }
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <label
+                          htmlFor={`entrepreneur-${entrepreneur._id}`}
+                          className="flex-1 text-sm font-medium leading-none hover:cursor-pointer"
+                        >
+                          {`${entrepreneur.firstName} ${entrepreneur.lastName}`}
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredEntrepreneurs?.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      No entrepreneurs found
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+              {sessionData.entrepreneurIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+                  {entrepreneurs
+                    ?.filter((e) => sessionData.entrepreneurIds.includes(e._id))
+                    .map((entrepreneur) => (
+                      <Badge
+                        key={entrepreneur._id}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
+                        {`${entrepreneur.firstName} ${entrepreneur.lastName}`}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleEntrepreneurSelect(entrepreneur._id)
+                          }
+                          className="hover:bg-destructive/20 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                </div>
+              )}
+            </Card>
+            {errors.entrepreneurIds && (
+              <p className="text-sm text-red-500">{errors.entrepreneurIds}</p>
             )}
           </div>
 

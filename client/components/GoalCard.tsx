@@ -103,9 +103,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { GoalDrawer } from "./GoalDrawer";
-import { UpdateGoalDialog } from "./UpdateGoalDialog";
-import { toast } from "sonner";
-import axios from "axios";
 
 interface GoalCardProps {
   goal: {
@@ -128,9 +125,9 @@ interface GoalCardProps {
       email: string;
     };
     updates: Array<{
-      updatedBy?: string; // Make optional as it's not always present
-      content?: string; // Make optional as it's not always present
-      timestamp?: string; // Make optional as it's not always present
+      updatedBy?: string;
+      content?: string;
+      timestamp?: string;
     }>;
     createdAt: string;
     __v: number;

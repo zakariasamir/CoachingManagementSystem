@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import SessionForm from "@/components/forms/SessionForm";
 import { toast } from "sonner";
-import { Session, SessionFormData } from "@/types/session";
+import { SessionFormData, SessionCardProps, Session } from "@/types/session";
 
 interface User {
   _id: string;
@@ -27,21 +27,11 @@ interface Participant {
   // user: User;
 }
 
-interface SessionCardProps {
-  id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  status: "scheduled" | "completed" | "cancelled";
-  notes?: string;
-  coach: string;
-  entrepreneur: string;
-}
 
 // Update the mapping logic with better type safety
 const mapSessionToCardProps = (session: Session): SessionCardProps => {
   const coachParticipant = session.participants.find((p) => p.role === "coach");
-  const entrepreneurParticipant = session.participants.find(
+  const entrepreneurs = session.participants.filter(
     (p) => p.role === "entrepreneur"
   );
 
@@ -50,14 +40,19 @@ const mapSessionToCardProps = (session: Session): SessionCardProps => {
     title: session.title,
     startTime: session.startTime,
     endTime: session.endTime,
-    status: session.status,
-    notes: "",
-    coach: coachParticipant
-      ? `${coachParticipant.userId.firstName} ${coachParticipant.userId.lastName}`
-      : "No coach assigned",
-    entrepreneur: entrepreneurParticipant
-      ? `${entrepreneurParticipant.userId.firstName} ${entrepreneurParticipant.userId.lastName}`
-      : "No entrepreneur assigned",
+    status: session.status as
+      | "scheduled"
+      | "completed"
+      | "cancelled"
+      | "requested"
+      | "declined",
+    price: session.price || 0,
+    notes: session.notes || "",
+    coach: {
+      firstName: coachParticipant?.userId.firstName || "No",
+      lastName: coachParticipant?.userId.lastName || "Coach",
+    },
+    entrepreneursCount: entrepreneurs.length,
   };
 };
 
@@ -136,26 +131,6 @@ const Sessions = () => {
               <SessionCard
                 key={session._id}
                 session={mapSessionToCardProps(session)}
-                onStatusChange={async (newStatus) => {
-                  try {
-                    await axios.patch(
-                      `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/sessions/${session._id}/status`,
-                      { status: newStatus },
-                      { withCredentials: true }
-                    );
-                    await mutate();
-                    toast.success("Session status updated");
-                  } catch (err) {
-                    const error = err;
-                    console.error("Failed to update session status:", error);
-                    toast.error(
-                      axios.isAxiosError(error)
-                        ? error.response?.data?.message ||
-                            "Failed to update session status"
-                        : "Failed to update session status"
-                    );
-                  }
-                }}
               />
             ))
           )}

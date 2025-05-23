@@ -225,7 +225,7 @@ const createSession = async (req: Request, res: Response): Promise<void> => {
     endTime,
     organizationId,
     coachId,
-    entrepreneurId,
+    entrepreneurIds,
     price,
   } = req.body;
 
@@ -235,10 +235,12 @@ const createSession = async (req: Request, res: Response): Promise<void> => {
     !endTime ||
     !organizationId ||
     !coachId ||
-    !entrepreneurId ||
+    !entrepreneurIds ||
+    !Array.isArray(entrepreneurIds) ||
+    entrepreneurIds.length === 0 ||
     !price
   ) {
-    res.status(400).json({ message: "Required fields are missing" });
+    res.status(400).json({ message: "Required fields are missing or invalid" });
     return;
   }
 
@@ -257,22 +259,31 @@ const createSession = async (req: Request, res: Response): Promise<void> => {
       userId: coachId,
       role: "coach",
     });
-    const entrepreneurParticipant = new SessionParticipant({
-      sessionId: session._id,
-      userId: entrepreneurId,
-      role: "entrepreneur",
-    });
+
+    const entrepreneurParticipants = entrepreneurIds.map(
+      (entrepreneurId) =>
+        new SessionParticipant({
+          sessionId: session._id,
+          userId: entrepreneurId,
+          role: "entrepreneur",
+        })
+    );
 
     await Promise.all([
       coachParticipant.save(),
-      entrepreneurParticipant.save(),
+      ...entrepreneurParticipants.map((p) => p.save()),
     ]);
 
     const coach = await User.findById(coachId);
+    const entrepreneurs = await User.find({ _id: { $in: entrepreneurIds } });
     const manager = await User.findById(
       (req as AuthenticatedRequest).user?.userId
     );
     const organization = await Organization.findById(organizationId);
+
+    const entrepreneurNames = entrepreneurs
+      .map((e) => `${e.firstName} ${e.lastName}`)
+      .join(", ");
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -281,12 +292,15 @@ const createSession = async (req: Request, res: Response): Promise<void> => {
       text: `Dear Coach ${coach?.firstName} ${coach?.lastName},
 
       You have been invited to lead a session on ${title} by ${manager?.firstName} ${manager?.lastName} from ${organization?.name}.
-
+      
+      The session will be with entrepreneurs: ${entrepreneurNames}
+      
       The session will be held on ${startTime} and will last until ${endTime}, and the price is ${price}.`,
       html: `<p>Dear Coach ${coach?.firstName} ${coach?.lastName},<br><br>
       You have been invited to lead a session on ${title} by ${manager?.firstName} ${manager?.lastName} from ${organization?.name}.<br><br>
+      The session will be with entrepreneurs: ${entrepreneurNames}<br><br>
       The session will be held on ${startTime} and will last until ${endTime}, and the price is ${price}.<br><br>
-      <a href="${process.env.FRONTEND_URL}/coach/sessionRequest>Click here to accept the invitation</a></p>`,
+      <a href="${process.env.FRONTEND_URL}/coach/sessionRequest/${session._id}">Click here to accept the invitation</a></p>`,
     };
 
     try {
@@ -403,6 +417,62 @@ const updateUserStatus = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const getSessionById = async (req: Request, res: Response): Promise<void> => {
+  const { sessionId } = req.params;
+  try {
+    const session = await Session.findById(sessionId).lean();
+    if (!session) {
+      res.status(404).json({ message: "Session not found" });
+      return;
+    }
+
+    const participants = await SessionParticipant.find({
+      sessionId: sessionId,
+    })
+      .populate("userId", "firstName lastName email profileImage")
+      .lean();
+
+    const coach = participants.find((p) => p.role === "coach")?.userId;
+    const entrepreneurs = participants
+      .filter((p) => p.role === "entrepreneur")
+      .map((p) => ({
+        ...p.userId,
+        // status: p.status,
+        joinedAt: p.joinedAt,
+      }));
+    const goals = await Goal.find({
+      sessionId,
+    })
+      .populate("entrepreneurId", "firstName lastName email")
+      .populate("coachId", "firstName lastName email")
+      .lean();
+
+    // Combine session with separated participants and goals
+    const sessionData = {
+      session: {
+        ...session,
+        coach,
+        entrepreneurs,
+      },
+      goals,
+    };
+
+    // Combine session with separated participants
+    // const sessionWithParticipants = {
+    //   ...session,
+    //   coach,
+    //   entrepreneurs,
+    // };
+
+    res.status(200).json(sessionData);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching session",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 export {
   getDashboardStats,
   listOrganizations,
@@ -419,4 +489,5 @@ export {
   updateUser,
   updateUserStatus,
   addUserToOrganization,
+  getSessionById,
 };

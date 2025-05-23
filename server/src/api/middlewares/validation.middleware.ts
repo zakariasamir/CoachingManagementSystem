@@ -37,7 +37,7 @@ const sessionValidation = {
       endTime: Joi.date().iso().min(Joi.ref("startTime")).required(),
       organizationId: Joi.string().required(),
       coachId: Joi.string().required(),
-      entrepreneurId: Joi.string().required(),
+      entrepreneurIds: Joi.array().items(Joi.string()).min(1).required(),
       price: Joi.number().required(),
       notes: Joi.string().optional().allow("").default(""),
     }),

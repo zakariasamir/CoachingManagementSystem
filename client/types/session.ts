@@ -3,7 +3,7 @@ export interface SessionFormData {
   startTime: string;
   endTime: string;
   coachId: string;
-  entrepreneurId: string;
+  entrepreneurIds: string[];
   notes?: string;
   price: number;
 }
@@ -21,13 +21,33 @@ export interface Session {
   title: string;
   startTime: string;
   endTime: string;
-  status: "scheduled" | "completed" | "cancelled";
-  createdAt: string;
+  status: string;
+  notes: string;
+  price: number;
   participants: {
     _id: string;
-    sessionId: string;
-    userId: User;
+    userId: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
     role: "coach" | "entrepreneur";
-    joinedAt: string;
+    status: string;
   }[];
+}
+
+export interface SessionCardProps {
+  id: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  status: "scheduled" | "completed" | "cancelled" | "requested" | "declined";
+  price: number;
+  notes: string;
+  coach: {
+    firstName: string;
+    lastName: string;
+  };
+  entrepreneursCount: number;
 }

@@ -35,7 +35,7 @@ export interface ISession extends BaseDocument {
   endTime: Date;
   price: number;
   isAccepted: boolean;
-  status: "requested" | "scheduled" | "completed" | "cancelled";
+  status: "requested" | "scheduled" | "completed" | "cancelled" | "declined";
   notes?: string;
 }
 
@@ -55,6 +55,7 @@ export interface IGoal extends BaseDocument {
   entrepreneurId: Types.ObjectId | IUser;
   coachId: Types.ObjectId | IUser;
   organizationId: Types.ObjectId | IOrganization;
+  sessionId: Types.ObjectId | ISession;
   title: string;
   description?: string;
   progress: number;

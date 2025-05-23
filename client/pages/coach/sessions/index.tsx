@@ -6,36 +6,13 @@ import axios from "axios";
 // import { useAuth } from "@/hooks/useAuth";
 import { useOrganization } from "@/hooks/useOrganization";
 import { toast } from "sonner";
+import { SessionCardProps, Session } from "@/types/session";
 
 interface User {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
-}
-
-interface Session {
-  _id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  status: "scheduled" | "completed" | "cancelled";
-  participants: Array<{
-    _id: string;
-    userId: User;
-    role: "coach" | "entrepreneur";
-  }>;
-}
-
-interface SessionCardProps {
-  id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  status: "scheduled" | "completed" | "cancelled";
-  notes?: string;
-  coach: string;
-  entrepreneur: string;
 }
 
 async function fetchSessions(url: string) {
@@ -45,7 +22,7 @@ async function fetchSessions(url: string) {
 
 const mapSessionToCardProps = (session: Session): SessionCardProps => {
   const coachParticipant = session.participants.find((p) => p.role === "coach");
-  const entrepreneurParticipant = session.participants.find(
+  const entrepreneurParticipants = session.participants.filter(
     (p) => p.role === "entrepreneur"
   );
 
@@ -54,14 +31,19 @@ const mapSessionToCardProps = (session: Session): SessionCardProps => {
     title: session.title,
     startTime: session.startTime,
     endTime: session.endTime,
-    status: session.status,
+    status: session.status as
+      | "scheduled"
+      | "completed"
+      | "cancelled"
+      | "requested"
+      | "declined",
+    price: session.price || 0,
     notes: "",
-    coach: coachParticipant
-      ? `${coachParticipant.userId.firstName} ${coachParticipant.userId.lastName}`
-      : "No coach assigned",
-    entrepreneur: entrepreneurParticipant
-      ? `${entrepreneurParticipant.userId.firstName} ${entrepreneurParticipant.userId.lastName}`
-      : "No entrepreneur assigned",
+    coach: {
+      firstName: coachParticipant?.userId.firstName || "No",
+      lastName: coachParticipant?.userId.lastName || "Coach",
+    },
+    entrepreneursCount: entrepreneurParticipants.length,
   };
 };
 
@@ -117,7 +99,7 @@ export default function CoachSessions() {
               <SessionCard
                 key={session._id}
                 session={mapSessionToCardProps(session)}
-                onStatusChange={(status) =>
+                onStatusChange={(status: string) =>
                   handleStatusChange(session._id, status)
                 }
               />

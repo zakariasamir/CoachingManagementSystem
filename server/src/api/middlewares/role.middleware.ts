@@ -8,14 +8,12 @@ const authorize = (...allowedRoles: string[]) => {
         message: "Access denied. Role information missing.",
       });
     }
-
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         message:
           "Access denied. Insufficient permissions for this organization.",
       });
     }
-
     next();
   };
 };

@@ -63,11 +63,6 @@ const Sidebar = () => {
       path: `/${selectedOrganization?.role}/sessions`,
       icon: <Calendar className="h-5 w-5" />,
     },
-    {
-      name: "Goals",
-      path: `/${selectedOrganization?.role}/goals`,
-      icon: <Flag className="h-5 w-5" />,
-    },
     ...(selectedOrganization?.role === "manager"
       ? [
           {
@@ -78,6 +73,11 @@ const Sidebar = () => {
           {
             name: "Users",
             path: "/manager/users",
+            icon: <Flag className="h-5 w-5" />,
+          },
+          {
+            name: "Goals",
+            path: `/${selectedOrganization?.role}/goals`,
             icon: <Flag className="h-5 w-5" />,
           },
         ]

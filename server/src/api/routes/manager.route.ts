@@ -14,6 +14,7 @@ import {
   updateUser,
   updateUserStatus,
   addUserToOrganization,
+  getSessionById,
 } from "../controllers/manager.controller";
 import { Router, RequestHandler } from "express";
 import authenticate from "../middlewares/auth.middleware";
@@ -33,13 +34,15 @@ const auth = [
 const router = Router();
 
 // Dashboard stats
-router.get("/dashboard/:organizationId", getDashboardStats as RequestHandler);
+router.get("/dashboard/:organizationId", auth, getDashboardStats as RequestHandler);
 // List organizations
 router.get("/organizations", auth, listOrganizations as RequestHandler);
 // List all organizations
 router.get("/organizations/all", auth, listAllOrganizations as RequestHandler);
 // List sessions
 router.get("/sessions", auth, listSessions as RequestHandler);
+// Get session by id
+router.get("/sessions/:sessionId", auth, getSessionById as RequestHandler);
 // List users
 router.get("/users", auth, listUsers as RequestHandler);
 // List goals

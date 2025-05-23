@@ -64,6 +64,21 @@ const listSessions = async (
   const { userId } = req.user!;
   const { organizationId } = req.query;
   try {
+    // First verify the user belongs to the organization
+    const organizationUser = await OrganizationUser.findOne({
+      userId,
+      organizationId,
+      status: "active",
+    });
+
+    if (!organizationUser) {
+      res.status(403).json({
+        message:
+          "Access denied. Insufficient permissions for this organization.",
+      });
+      return;
+    }
+
     const sessionParticipants = await SessionParticipant.find({
       userId,
       role: "entrepreneur",
@@ -183,10 +198,99 @@ const listOrganizations = async (
   }
 };
 
+const getSessionById = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const { sessionId } = req.params;
+  const { organizationId } = req.query;
+  const { userId } = req.user!;
+
+  try {
+    // First verify the user belongs to the organization
+    const organizationUser = await OrganizationUser.findOne({
+      userId,
+      organizationId,
+      status: "active",
+    });
+
+    if (!organizationUser) {
+      res.status(403).json({
+        message:
+          "Access denied. Insufficient permissions for this organization. hello",
+      });
+      return;
+    }
+
+    // Verify the session belongs to the organization
+    const sessionOrganization = await SessionOrganization.findOne({
+      organizationId,
+      sessionId,
+    });
+
+    if (!sessionOrganization) {
+      res.status(404).json({ message: "Session not found" });
+      return;
+    }
+
+    // Verify the entrepreneur is part of this session
+    const entrepreneurParticipant = await SessionParticipant.findOne({
+      sessionId,
+      userId,
+      role: "entrepreneur",
+    });
+
+    if (!entrepreneurParticipant) {
+      res.status(403).json({ message: "Not authorized to view this session" });
+      return;
+    }
+
+    // Get all participants for this session
+    const participants = await SessionParticipant.find({
+      sessionId,
+    }).populate("userId", "firstName lastName email");
+
+    // Get the session
+    const session = await Session.findById(sessionId);
+
+    if (!session) {
+      res.status(404).json({ message: "Session not found" });
+      return;
+    }
+
+    // Get goals for this session and organization
+    const goals = await Goal.find({
+      sessionId,
+      organizationId,
+      entrepreneurId: userId,
+    })
+      .populate("coachId", "firstName lastName email")
+      .lean();
+
+    // Combine session with participants and goals
+    const sessionData = {
+      session: {
+        ...session.toObject(),
+        participants,
+      },
+      goals,
+    };
+
+    res.status(200).json(sessionData);
+  } catch (error) {
+    console.error("Error in getSessionById:", error);
+    res.status(500).json({
+      message: "Error fetching session details",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 export {
   getDashboardStats,
   listSessions,
   listGoals,
   updateGoal,
   listOrganizations,
+  getSessionById,
 };

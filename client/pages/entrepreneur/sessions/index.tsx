@@ -11,6 +11,7 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  profileImage?: string;
 }
 
 interface Session {
@@ -19,6 +20,7 @@ interface Session {
   startTime: string;
   endTime: string;
   status: "scheduled" | "completed" | "cancelled";
+  price: number;
   participants: Array<{
     _id: string;
     userId: User;
@@ -60,32 +62,38 @@ export default function EntrepreneurSessions() {
               No sessions found
             </div>
           ) : (
-            sessions.map((session) => (
-              <SessionCard
-                key={session._id}
-                session={{
-                  id: session._id,
-                  title: session.title,
-                  startTime: session.startTime,
-                  endTime: session.endTime,
-                  status: session.status,
-                  coach: `${
-                    session.participants.find((p) => p.role === "coach")?.userId
-                      .firstName
-                  } ${
-                    session.participants.find((p) => p.role === "coach")?.userId
-                      .lastName
-                  }`,
-                  entrepreneur: `${
-                    session.participants.find((p) => p.role === "entrepreneur")
-                      ?.userId.firstName
-                  } ${
-                    session.participants.find((p) => p.role === "entrepreneur")
-                      ?.userId.lastName
-                  }`,
-                }}
-              />
-            ))
+            sessions.map((session) => {
+              const coach = session.participants.find(
+                (p) => p.role === "coach"
+              )?.userId;
+              const entrepreneurs = session.participants
+                .filter((p) => p.role === "entrepreneur")
+                .map((p) => p.userId);
+
+              return (
+                <SessionCard
+                  key={session._id}
+                  session={{
+                    id: session._id,
+                    title: session.title,
+                    startTime: session.startTime,
+                    endTime: session.endTime,
+                    status: session.status,
+                    price: session.price || 0,
+                    coach: coach
+                      ? {
+                          firstName: coach.firstName,
+                          lastName: coach.lastName,
+                        }
+                      : {
+                          firstName: "No",
+                          lastName: "Coach",
+                        },
+                    entrepreneursCount: entrepreneurs.length,
+                  }}
+                />
+              );
+            })
           )}
         </div>
       </div>

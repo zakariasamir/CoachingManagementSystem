@@ -9,6 +9,7 @@ const goalSchema = new Schema<IGoal>({
     ref: "Organization",
     required: true,
   },
+  sessionId: { type: Schema.Types.ObjectId, ref: "Session", required: true },
   title: { type: String, required: true },
   description: { type: String },
   progress: { type: Number, default: 0 },

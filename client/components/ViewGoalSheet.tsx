@@ -7,18 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { format } from "date-fns";
 
 interface Goal {
@@ -31,6 +20,10 @@ interface Goal {
     firstName: string;
     lastName: string;
   };
+  coachId: {
+    firstName: string;
+    lastName: string;
+  };
   updates?: Array<{
     content?: string;
     timestamp?: string;
@@ -38,13 +31,8 @@ interface Goal {
   createdAt: string;
 }
 
-interface GoalSheetProps {
+interface ViewGoalSheetProps {
   goal: Goal;
-  onProgressUpdate: (
-    goalId: string,
-    progress: number,
-    note: string
-  ) => Promise<void>;
   trigger?: React.ReactNode;
 }
 
@@ -59,86 +47,8 @@ const formatDate = (dateString: string | undefined) => {
   }
 };
 
-function UpdateProgressDialog({
-  goal,
-  onProgressUpdate,
-  onOpenChange,
-}: {
-  goal: Goal;
-  onProgressUpdate: (
-    goalId: string,
-    progress: number,
-    note: string
-  ) => Promise<void>;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [progress, setProgress] = useState(goal.progress);
-  const [note, setNote] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUpdating(true);
-    try {
-      await onProgressUpdate(goal._id, progress, note);
-      onOpenChange(false);
-      setNote("");
-    } catch (error) {
-      console.error("Error updating goal:", error);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  return (
-    <DialogContent className="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle>Update Goal Progress</DialogTitle>
-        <DialogDescription>
-          Update progress for {goal.entrepreneurId.firstName}{" "}
-          {goal.entrepreneurId.lastName}&apos;s goal
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-        <div className="space-y-4">
-          <Label>Progress ({progress}%)</Label>
-          <Slider
-            value={[progress]}
-            onValueChange={(value) => setProgress(value[0])}
-            max={100}
-            step={1}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="note">Update Note</Label>
-          <Textarea
-            id="note"
-            placeholder="Add a note about this progress update..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            required
-          />
-        </div>
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isUpdating}>
-            {isUpdating ? "Updating..." : "Update"}
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  );
-}
-
-export function GoalSheet({ goal, onProgressUpdate, trigger }: GoalSheetProps) {
+export function ViewGoalSheet({ goal, trigger }: ViewGoalSheetProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -163,10 +73,10 @@ export function GoalSheet({ goal, onProgressUpdate, trigger }: GoalSheetProps) {
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
           <SheetTitle>{goal.title}</SheetTitle>
-          <SheetDescription>
+          {/* <SheetDescription>
             Goal for {goal.entrepreneurId.firstName}{" "}
             {goal.entrepreneurId.lastName}
-          </SheetDescription>
+          </SheetDescription> */}
         </SheetHeader>
 
         <div className="mt-8 space-y-6 p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
@@ -202,10 +112,18 @@ export function GoalSheet({ goal, onProgressUpdate, trigger }: GoalSheetProps) {
             <p className="text-sm text-muted-foreground">{goal.description}</p>
           </div>
 
+          {/* Coach Section */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Assigned Coach</h3>
+            <p className="text-sm text-muted-foreground">
+              {goal.coachId.firstName} {goal.coachId.lastName}
+            </p>
+          </div>
+
           {/* Updates Section */}
           {goal.updates && goal.updates.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-medium">Recent Updates</h3>
+              <h3 className="text-sm font-medium">Progress Updates</h3>
               <div className="space-y-4">
                 {goal.updates
                   .slice()
@@ -231,18 +149,6 @@ export function GoalSheet({ goal, onProgressUpdate, trigger }: GoalSheetProps) {
               Created on {formatDate(goal.createdAt)}
             </p>
           </div>
-
-          {/* Update Button */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full">Update Progress</Button>
-            </DialogTrigger>
-            <UpdateProgressDialog
-              goal={goal}
-              onProgressUpdate={onProgressUpdate}
-              onOpenChange={setIsDialogOpen}
-            />
-          </Dialog>
         </div>
       </SheetContent>
     </Sheet>
