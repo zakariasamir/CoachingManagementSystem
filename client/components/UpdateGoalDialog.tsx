@@ -163,10 +163,6 @@ export function GoalSheet({ goal, onProgressUpdate, trigger }: GoalSheetProps) {
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
           <SheetTitle>{goal.title}</SheetTitle>
-          <SheetDescription>
-            Goal for {goal.entrepreneurId.firstName}{" "}
-            {goal.entrepreneurId.lastName}
-          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-8 space-y-6 p-6 overflow-y-auto max-h-[calc(100vh-200px)]">

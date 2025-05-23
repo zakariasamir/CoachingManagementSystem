@@ -62,7 +62,6 @@ const Login = () => {
           false
         );
         if (data.user.organizations && data.user.organizations.selected) {
-          console.log("Login successful:", data);
           router.push(`/${data.user.organizations.role}/dashboard`);
         }
       },

@@ -9,6 +9,7 @@ import {
   updateSessionStatus,
   getRequestedSession,
   getSessionById,
+  createGoal,
 } from "../controllers/coach.controller";
 import { Router, RequestHandler } from "express";
 import authenticate from "../middlewares/auth.middleware";
@@ -32,6 +33,8 @@ router.get("/sessions/:sessionId", auth, getSessionById as RequestHandler);
 router.patch("/sessions/:sessionId", auth, updateSession as RequestHandler);
 // List goals
 router.get("/goals", auth, listGoals as RequestHandler);
+// Create goal
+router.post("/goals", auth, createGoal as RequestHandler);
 // Update goal progress
 router.patch("/goals/:goalId", auth, updateGoal as RequestHandler);
 // list organizations

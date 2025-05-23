@@ -2,7 +2,6 @@ import { Schema, model, Document, Query } from "mongoose";
 import { IGoal } from "../types/index";
 
 const goalSchema = new Schema<IGoal>({
-  entrepreneurId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   coachId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   organizationId: {
     type: Schema.Types.ObjectId,

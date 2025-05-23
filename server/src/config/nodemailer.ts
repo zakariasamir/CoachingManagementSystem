@@ -1,28 +1,47 @@
+/**
+ * Email Service Configuration
+ *
+ * Sets up Nodemailer for sending emails using Gmail SMTP.
+ * Requires EMAIL_USER and EMAIL_PASS environment variables to be set.
+ */
+
 import nodemailer, { Transporter } from "nodemailer";
 import { config } from "dotenv";
 
+// Load environment variables
 config();
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  throw new Error("Email configuration is missing in environment variables");
+// Validate required environment variables
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+
+if (!EMAIL_USER || !EMAIL_PASS) {
+  throw new Error(
+    "Email configuration is missing. Please set EMAIL_USER and EMAIL_PASS in environment variables."
+  );
 }
 
+/**
+ * Gmail SMTP Configuration
+ * Uses SSL for secure email transmission
+ */
 const transporter: Transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true,
+  secure: true, // Use SSL
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: EMAIL_USER,
+    pass: EMAIL_PASS,
   },
 });
 
-// Verify transporter configuration
+// Verify email configuration on startup
 transporter.verify((error: Error | null, success: boolean) => {
   if (error) {
-    console.error("Nodemailer configuration error:", error);
+    console.error("Email service configuration error:", error);
+    // Don't exit process as email might not be critical for the application
   } else {
-    console.log("Nodemailer is ready to send emails");
+    console.log("Email service configured successfully");
   }
 });
 

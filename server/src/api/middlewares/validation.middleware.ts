@@ -64,7 +64,7 @@ const organizationValidation = {
 const goalValidation = {
   createGoal: celebrate({
     body: Joi.object({
-      entrepreneurId: Joi.string().required(),
+      sessionId: Joi.string().required(),
       coachId: Joi.string().required(),
       organizationId: Joi.string().required(),
       title: Joi.string().required(),
@@ -90,7 +90,7 @@ const authValidation = {
   login: celebrate({
     body: Joi.object({
       email: Joi.string().email().required(),
-      password: Joi.string().required(),
+      password: Joi.string().min(6).required(),
     }),
   }),
   switchOrganization: celebrate({

@@ -18,16 +18,16 @@ import {
   MapPin,
   Target,
   CheckCircle2,
-  XCircle,
   Clock4,
 } from "lucide-react";
 import Link from "next/link";
 import { useOrganization } from "@/hooks/useOrganization";
-import { GoalCard } from "@/components/GoalCard";
 import { GoalSheet } from "@/components/UpdateGoalDialog";
+import { AddGoalDialog } from "@/components/AddGoalDialog";
 import { toast } from "sonner";
 import Image from "next/image";
 
+// Type definitions for the session page
 interface User {
   _id: string;
   firstName: string;
@@ -88,6 +88,9 @@ interface SessionResponse {
   goals: Goal[];
 }
 
+/**
+ * Helper function to format dates consistently throughout the page
+ */
 const formatDateTime = (dateString: string | undefined, formatStr: string) => {
   if (!dateString) return "";
   try {
@@ -104,6 +107,9 @@ const formatDate = (dateString: string | undefined) =>
 const formatTime = (dateString: string | undefined) =>
   formatDateTime(dateString, "h:mm a");
 
+/**
+ * Fetches session data including goals from the API
+ */
 async function fetchSessionData(url: string) {
   const response = await axios.get<SessionResponse>(url, {
     withCredentials: true,
@@ -111,6 +117,9 @@ async function fetchSessionData(url: string) {
   return response.data;
 }
 
+/**
+ * Returns the appropriate icon based on goal status
+ */
 const getGoalStatusIcon = (status: string) => {
   switch (status) {
     case "completed":
@@ -122,11 +131,20 @@ const getGoalStatusIcon = (status: string) => {
   }
 };
 
+/**
+ * CoachSessionDetails Component
+ *
+ * Displays detailed information about a coaching session including:
+ * - Session information (title, time, location, price)
+ * - List of participating entrepreneurs
+ * - Session goals with progress tracking
+ */
 export default function CoachSessionDetails() {
   const { selectedOrganization } = useOrganization();
   const router = useRouter();
   const { id } = router.query;
 
+  // Fetch session data
   const { data, error, mutate } = useSWR(
     id && selectedOrganization?.id
       ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/${id}?organizationId=${selectedOrganization.id}`
@@ -134,6 +152,29 @@ export default function CoachSessionDetails() {
     fetchSessionData
   );
 
+  // Handle goal creation
+  const handleGoalAdd = async (goalData: {
+    title: string;
+    description: string;
+    sessionId: string;
+    coachId: string;
+    organizationId: string;
+  }) => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/goals`,
+        goalData,
+        { withCredentials: true }
+      );
+      await mutate();
+      toast.success("Goal added successfully");
+    } catch (error) {
+      toast.error("Failed to add goal");
+      console.error("Error adding goal:", error);
+    }
+  };
+
+  // Handle goal updates (progress and notes)
   const handleGoalUpdate = async (
     goalId: string,
     progress: number,
@@ -150,7 +191,7 @@ export default function CoachSessionDetails() {
         },
         { withCredentials: true }
       );
-      await mutate(); // This will refresh both session and goals data
+      await mutate();
       toast.success("Goal updated successfully");
     } catch (error) {
       toast.error("Failed to update goal");
@@ -189,6 +230,7 @@ export default function CoachSessionDetails() {
   return (
     <CoachLayout>
       <div className="p-6 space-y-6">
+        {/* Header with back button and session status */}
         <div className="flex items-center justify-between">
           <Link href="/coach/sessions">
             <Button variant="ghost" className="flex items-center gap-2">
@@ -290,14 +332,12 @@ export default function CoachSessionDetails() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Session Goals</h2>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    router.push(`/coach/goals/new?sessionId=${session._id}`)
-                  }
-                >
-                  Add Goal
-                </Button>
+                <AddGoalDialog
+                  coachId={session.coach._id}
+                  organizationId={selectedOrganization?.id || ""}
+                  sessionId={id as string}
+                  onGoalAdd={handleGoalAdd}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -311,10 +351,6 @@ export default function CoachSessionDetails() {
                       <div className="flex items-start justify-between">
                         <div>
                           <h3 className="font-medium">{goal.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            For: {goal.entrepreneurId.firstName}{" "}
-                            {goal.entrepreneurId.lastName}
-                          </p>
                         </div>
                         {getGoalStatusIcon(goal.status)}
                       </div>

@@ -315,10 +315,6 @@ export default function EntrepreneurSessionDetails() {
                       <div className="flex items-start justify-between">
                         <div>
                           <h3 className="font-medium">{goal.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            For: {goal.entrepreneurId.firstName}{" "}
-                            {goal.entrepreneurId.lastName}
-                          </p>
                         </div>
                         {getGoalStatusIcon(goal.status)}
                       </div>

@@ -432,7 +432,7 @@ const getSessionById = async (req: Request, res: Response): Promise<void> => {
       sessionId,
       organizationId,
     })
-      .populate("entrepreneurId", "firstName lastName email")
+      // .populate("entrepreneurId", "firstName lastName email")
       .populate("coachId", "firstName lastName email")
       .lean();
 
@@ -455,6 +455,34 @@ const getSessionById = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const createGoal = async (req: Request, res: Response): Promise<void> => {
+  const { coachId, organizationId, title, description, sessionId } = req.body;
+
+  if (!coachId || !organizationId || !title || !sessionId) {
+    res.status(400).json({ message: "Required fields are missing" });
+    return;
+  }
+
+  try {
+    const newGoal = new Goal({
+      coachId,
+      organizationId,
+      title,
+      description,
+      sessionId,
+    });
+    await newGoal.save();
+    res
+      .status(201)
+      .json({ message: "Goal created successfully", goal: newGoal });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error creating goal",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 export {
   getDashboardStats,
   listSessions,
@@ -466,4 +494,5 @@ export {
   updateSessionStatus,
   getRequestedSession,
   getSessionById,
+  createGoal,
 };

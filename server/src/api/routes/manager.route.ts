@@ -7,7 +7,7 @@ import {
   listGoals,
   createOrganization,
   createSession,
-  createGoal,
+  // createGoal,
   listPayments,
   generateInvoice,
   createUser,
@@ -55,12 +55,12 @@ router.post(
   createSession as RequestHandler
 );
 // Create goal
-router.post(
-  "/goals",
-  auth,
-  goalValidation.createGoal as RequestHandler,
-  createGoal as RequestHandler
-);
+// router.post(
+//   "/goals",
+//   auth,
+//   goalValidation.createGoal as RequestHandler,
+//   createGoal as RequestHandler
+// );
 // List payments
 router.get("/payments", auth, listPayments as RequestHandler);
 // Generate invoice

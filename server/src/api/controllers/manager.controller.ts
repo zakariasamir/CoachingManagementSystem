@@ -326,35 +326,6 @@ const createSession = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const createGoal = async (req: Request, res: Response): Promise<void> => {
-  const { entrepreneurId, coachId, organizationId, title, description } =
-    req.body;
-
-  if (!entrepreneurId || !coachId || !organizationId || !title) {
-    res.status(400).json({ message: "Required fields are missing" });
-    return;
-  }
-
-  try {
-    const newGoal = new Goal({
-      entrepreneurId,
-      coachId,
-      organizationId,
-      title,
-      description,
-    });
-    await newGoal.save();
-    res
-      .status(201)
-      .json({ message: "Goal created successfully", goal: newGoal });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error creating goal",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-};
-
 const listPayments = async (req: Request, res: Response): Promise<void> => {
   try {
     const payments = await Payment.find();
@@ -443,7 +414,6 @@ const getSessionById = async (req: Request, res: Response): Promise<void> => {
     const goals = await Goal.find({
       sessionId,
     })
-      .populate("entrepreneurId", "firstName lastName email")
       .populate("coachId", "firstName lastName email")
       .lean();
 
@@ -482,7 +452,6 @@ export {
   listGoals,
   createOrganization,
   createSession,
-  createGoal,
   listPayments,
   generateInvoice,
   createUser,

@@ -75,11 +75,6 @@ const Sidebar = () => {
             path: "/manager/users",
             icon: <Flag className="h-5 w-5" />,
           },
-          {
-            name: "Goals",
-            path: `/${selectedOrganization?.role}/goals`,
-            icon: <Flag className="h-5 w-5" />,
-          },
         ]
       : []),
     ...(selectedOrganization?.role === "coach"
