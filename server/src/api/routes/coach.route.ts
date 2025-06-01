@@ -10,6 +10,8 @@ import {
   getRequestedSession,
   getSessionById,
   createGoal,
+  listInvoices,
+  processInvoice,
 } from "../controllers/coach.controller";
 import { Router, RequestHandler } from "express";
 import authenticate from "../middlewares/auth.middleware";
@@ -50,6 +52,14 @@ router.patch(
   "/sessions/:sessionId/status",
   auth,
   updateSessionStatus as RequestHandler
+);
+// List invoices
+router.get("/invoices", auth, listInvoices as RequestHandler);
+// Process invoice
+router.post(
+  "/invoices/:invoiceId/process",
+  auth,
+  processInvoice as RequestHandler
 );
 
 export default router;

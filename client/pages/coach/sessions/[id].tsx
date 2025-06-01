@@ -26,6 +26,15 @@ import { GoalSheet } from "@/components/UpdateGoalDialog";
 import { AddGoalDialog } from "@/components/AddGoalDialog";
 import { toast } from "sonner";
 import Image from "next/image";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 // Type definitions for the session page
 interface User {
@@ -143,6 +152,8 @@ export default function CoachSessionDetails() {
   const { selectedOrganization } = useOrganization();
   const router = useRouter();
   const { id } = router.query;
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch session data
   const { data, error, mutate } = useSWR(
@@ -199,6 +210,30 @@ export default function CoachSessionDetails() {
     }
   };
 
+  // Handle session completion and invoice generation
+  const handleCompleteSession = async () => {
+    setIsLoading(true);
+    try {
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/${id}`,
+        {
+          status: "completed",
+          organizationId: selectedOrganization?.id,
+        },
+        { withCredentials: true }
+      );
+
+      await mutate();
+      setIsCompleteDialogOpen(false);
+      toast.success("Session completed and invoice sent successfully");
+    } catch (error) {
+      toast.error("Failed to complete session");
+      console.error("Error completing session:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (error) {
     return (
       <CoachLayout>
@@ -230,7 +265,7 @@ export default function CoachSessionDetails() {
   return (
     <CoachLayout>
       <div className="p-6 space-y-6">
-        {/* Header with back button and session status */}
+        {/* Header with back button, session status, and complete button */}
         <div className="flex items-center justify-between">
           <Link href="/coach/sessions">
             <Button variant="ghost" className="flex items-center gap-2">
@@ -238,12 +273,19 @@ export default function CoachSessionDetails() {
               Back to Sessions
             </Button>
           </Link>
-          <Badge
-            variant={session.status === "scheduled" ? "outline" : "default"}
-            className="text-sm"
-          >
-            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-          </Badge>
+          <div className="flex items-center gap-4">
+            <Badge
+              variant={session.status === "completed" ? "default" : "secondary"}
+              className="text-sm"
+            >
+              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            </Badge>
+            {session.status === "scheduled" && (
+              <Button onClick={() => setIsCompleteDialogOpen(true)}>
+                Complete Session & Send Invoice
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -390,6 +432,34 @@ export default function CoachSessionDetails() {
             </div>
           </Card>
         </div>
+
+        {/* Complete Session Dialog */}
+        <Dialog
+          open={isCompleteDialogOpen}
+          onOpenChange={setIsCompleteDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Complete Session and Send Invoice</DialogTitle>
+              <DialogDescription>
+                This will mark the session as completed and automatically
+                generate an invoice for the organization. The manager will be
+                notified via email.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsCompleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCompleteSession} disabled={isLoading}>
+                {isLoading ? "Processing..." : "Complete & Send Invoice"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </CoachLayout>
   );

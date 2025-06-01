@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { format } from "date-fns";
@@ -27,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
+// import { Session } from "inspector/promises";
 
 interface User {
   _id: string;
@@ -51,35 +53,32 @@ interface Session {
   notes?: string;
 }
 
+async function fetchSessions(url: string) {
+  const response = await axios.get<Session>(url, { withCredentials: true });
+  return response.data;
+}
+
 export default function SessionRequestDetails() {
   const router = useRouter();
   const { id } = router.query;
   const { selectedOrganization } = useOrganization();
   const organizationId = selectedOrganization?.id;
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  const fetchSession = async () => {
-    if (!id || !organizationId) return;
-    setIsLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/requests/${id}?organizationId=${organizationId}`,
-        { withCredentials: true }
-      );
-      setSession(response.data);
-    } catch (error) {
-      console.error("Failed to fetch session:", error);
-      toast.error("Failed to load session details");
-    } finally {
-      setIsLoading(false);
+  const {
+    data: session,
+    // error,
+    isLoading,
+    mutate,
+  } = useSWR(
+    organizationId
+      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/requests/${id}?organizationId=${organizationId}`
+      : null,
+    fetchSessions,
+    {
+      revalidateOnFocus: false,
     }
-  };
-
-  useEffect(() => {
-    fetchSession();
-  });
+  );
 
   const handleUpdateSession = async (isAccepted: boolean) => {
     if (!session) return;

@@ -2,40 +2,115 @@ import { Request, Response } from "express";
 import { SessionParticipant } from "../models/sessionParticipant.model";
 import { SessionOrganization } from "../models/sessionOrganization.model";
 import { OrganizationUser } from "../models/organizationUser.model";
+import { Invoice } from "../models/invoice.model";
+import { Payment } from "../models/payment.model";
 import { Goal } from "../models/goal.model";
 import { Session } from "../models/session.model";
 import { User } from "../models/user.model";
-import { AuthenticatedRequest, IOrganization } from "../types/index";
+import {
+  AuthenticatedRequest,
+  IOrganization,
+  SessionWithId,
+} from "../types/index";
 
 const getDashboardStats = async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
-  const { userId } = req.user!;
   const { organizationId } = req.query;
+  const { userId } = (req as AuthenticatedRequest).user!;
+
   try {
-    const sessionOrganization = await SessionOrganization.find({
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 5);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Get coach's sessions
+    const sessionParticipants = await SessionParticipant.find({
+      userId,
+      role: "coach",
+    });
+    const sessionIds = sessionParticipants.map((sp) => sp.sessionId);
+
+    const orgSessions = await SessionOrganization.find({
       organizationId,
-    });
-    const sessionIds = sessionOrganization.map((so) => so.sessionId);
-    const totalSessions = await Session.countDocuments({
-      _id: { $in: sessionIds },
-    });
-    const completedSessions = await Session.countDocuments({
-      _id: { $in: sessionIds },
-      status: "completed",
-    });
-    const totalGoals = await Goal.countDocuments({
-      coachId: userId,
-      organizationId,
+      sessionId: { $in: sessionIds },
+    }).populate<{ sessionId: SessionWithId }>({
+      path: "sessionId",
+      model: "Session",
+      match: { createdAt: { $gte: startDate } },
+      select: "title status startTime endTime price createdAt",
     });
 
+    const goals = await Goal.find({
+      coachId: userId,
+      organizationId,
+      createdAt: { $gte: startDate },
+    });
+
+    const monthlyData = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString("default", { month: "long" });
+
+      const monthSessions = orgSessions.filter((os) => {
+        const sessionDate = new Date(os.sessionId.createdAt);
+        return (
+          sessionDate.getMonth() === date.getMonth() &&
+          sessionDate.getFullYear() === date.getFullYear()
+        );
+      });
+
+      const monthGoals = goals.filter((g) => {
+        const goalDate = new Date(g.createdAt);
+        return (
+          goalDate.getMonth() === date.getMonth() &&
+          goalDate.getFullYear() === date.getFullYear()
+        );
+      });
+
+      return {
+        month,
+        sessions: {
+          total: monthSessions.length,
+          completed: monthSessions.filter(
+            (s) => s.sessionId.status === "completed"
+          ).length,
+          upcoming: monthSessions.filter(
+            (s) => s.sessionId.status === "scheduled"
+          ).length,
+        },
+        goals: {
+          total: monthGoals.length,
+          completed: monthGoals.filter((g) => g.status === "completed").length,
+          inProgress: monthGoals.filter((g) => g.status === "in-progress")
+            .length,
+        },
+      };
+    }).reverse();
+
+    const totals = {
+      sessions: {
+        total: orgSessions.length,
+        completed: orgSessions.filter((s) => s.sessionId.status === "completed")
+          .length,
+        upcoming: orgSessions.filter((s) => s.sessionId.status === "scheduled")
+          .length,
+      },
+      goals: {
+        total: goals.length,
+        completed: goals.filter((g) => g.status === "completed").length,
+        inProgress: goals.filter((g) => g.status === "in-progress").length,
+      },
+    };
+
     res.status(200).json({
-      totalSessions,
-      completedSessions,
-      totalGoals,
+      monthlyData,
+      totals,
     });
   } catch (error) {
+    console.error("Error in getDashboardStats:", error);
     res.status(500).json({
       message: "Error fetching dashboard stats",
       error: error instanceof Error ? error.message : "Unknown error",
@@ -170,7 +245,7 @@ const updateGoal = async (req: Request, res: Response): Promise<void> => {
 
     const updatedGoal = await Goal.findByIdAndUpdate(goalId, updateData, {
       new: true,
-    }).populate("entrepreneurId", "firstName lastName email");
+    });
 
     res.status(200).json(updatedGoal);
   } catch (error) {
@@ -483,6 +558,96 @@ const createGoal = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const listInvoices = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = (req as AuthenticatedRequest).user!;
+  const { status, startDate, endDate } = req.query;
+
+  try {
+    const query: any = {
+      coachId: userId,
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      };
+    }
+
+    const invoices = await Invoice.find(query)
+      .populate("sessionId", "title startTime endTime")
+      .populate("organizationId", "name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Invoices retrieved successfully",
+      data: invoices,
+    });
+  } catch (error) {
+    console.error("Error in listInvoices:", error);
+    res.status(500).json({
+      message: "Error retrieving invoices",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+const processInvoice = async (req: Request, res: Response): Promise<void> => {
+  const { invoiceId } = req.params;
+  const { userId } = (req as AuthenticatedRequest).user!;
+
+  try {
+    const invoice = await Invoice.findOne({
+      _id: invoiceId,
+      issuedTo: userId,
+    });
+
+    if (!invoice) {
+      res.status(404).json({ message: "Invoice not found" });
+      return;
+    }
+
+    if (invoice.status !== "sent") {
+      res.status(400).json({ message: "Invoice has already been processed" });
+      return;
+    }
+
+    // Create payment record first
+    const payment = await Payment.create({
+      coachId: userId,
+      organizationId: invoice.organizationId,
+      // sessionIds: [invoice.sessionId],
+      amount: invoice.amount,
+      status: "paid",
+      issuedAt: new Date(),
+      paidAt: new Date(),
+    });
+
+    // Update invoice status
+    invoice.status = "paid";
+    invoice.paymentId = payment._id;
+    await invoice.save();
+
+    res.status(200).json({
+      message: "Invoice processed successfully",
+      data: {
+        invoice,
+        payment,
+      },
+    });
+  } catch (error) {
+    console.error("Error in processInvoice:", error);
+    res.status(500).json({
+      message: "Error processing invoice",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 export {
   getDashboardStats,
   listSessions,
@@ -495,4 +660,6 @@ export {
   getRequestedSession,
   getSessionById,
   createGoal,
+  listInvoices,
+  processInvoice,
 };

@@ -1,20 +1,5 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-// import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Calendar, Clock, DollarSign, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -60,29 +45,7 @@ export function SessionCard({ session, onStatusChange }: SessionCardProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold truncate">{session.title}</h3>
-            {onStatusChange ? (
-              <select
-                className="text-sm border rounded px-2 py-1"
-                value={session.status}
-                onChange={(e) => {
-                  e.preventDefault(); // Prevent link navigation
-                  onStatusChange(e.target.value);
-                }}
-                onClick={(e) => e.stopPropagation()} // Prevent link navigation
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            ) : (
-              <Badge
-                variant={session.status === "pending" ? "outline" : "default"}
-                className={getStatusColor(session.status)}
-              >
-                {session.status.charAt(0).toUpperCase() +
-                  session.status.slice(1)}
-              </Badge>
-            )}
+            <StatusBadge status={session.status} />
           </div>
 
           <p className="text-sm text-muted-foreground">

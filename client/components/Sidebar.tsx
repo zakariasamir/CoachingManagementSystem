@@ -10,6 +10,7 @@ import {
   X,
   Building,
   Loader2,
+  File,
 } from "lucide-react";
 import {
   Select,
@@ -53,35 +54,69 @@ const Sidebar = () => {
   }, [isAuthLoading, isAuthenticated, router]);
 
   const menuItems = [
-    {
-      name: "Dashboard",
-      path: `/${selectedOrganization?.role}/dashboard`,
-      icon: <Home className="h-5 w-5" />,
-    },
-    {
-      name: "Sessions",
-      path: `/${selectedOrganization?.role}/sessions`,
-      icon: <Calendar className="h-5 w-5" />,
-    },
     ...(selectedOrganization?.role === "manager"
       ? [
           {
-            name: "Payments",
-            path: "/manager/payments",
-            icon: <CreditCard className="h-5 w-5" />,
+            name: "Dashboard",
+            path: "/manager/dashboard",
+            icon: <Home className="h-5 w-5" />,
           },
+          {
+            name: "Sessions",
+            path: "/manager/sessions",
+            icon: <Calendar className="h-5 w-5" />,
+          },
+          // {
+          //   name: "Payments",
+          //   path: "/manager/payments",
+          //   icon: <CreditCard className="h-5 w-5" />,
+          // },
           {
             name: "Users",
             path: "/manager/users",
             icon: <Flag className="h-5 w-5" />,
+          },
+          {
+            name: "Invoices",
+            path: "/manager/invoices",
+            icon: <File className="h-5 w-5" />,
           },
         ]
       : []),
     ...(selectedOrganization?.role === "coach"
       ? [
           {
+            name: "Dashboard",
+            path: "/coach/dashboard",
+            icon: <Home className="h-5 w-5" />,
+          },
+          {
+            name: "Sessions",
+            path: "/coach/sessions",
+            icon: <Calendar className="h-5 w-5" />,
+          },
+          {
             name: "Sessions Request",
             path: "/coach/sessionRequest",
+            icon: <Calendar className="h-5 w-5" />,
+          },
+          {
+            name: "Invoices",
+            path: "/coach/invoices",
+            icon: <File className="h-5 w-5" />,
+          },
+        ]
+      : []),
+    ...(selectedOrganization?.role === "entrepreneur"
+      ? [
+          {
+            name: "Dashboard",
+            path: "/entrepreneur/dashboard",
+            icon: <Home className="h-5 w-5" />,
+          },
+          {
+            name: "Sessions",
+            path: "/entrepreneur/sessions",
             icon: <Calendar className="h-5 w-5" />,
           },
         ]

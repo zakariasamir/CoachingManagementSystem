@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { format } from "date-fns";
@@ -39,30 +40,30 @@ interface Session {
   entrepreneurs: User[];
 }
 
+async function fetchSessions(url: string) {
+  const response = await axios.get<Session[]>(url, { withCredentials: true });
+  return response.data;
+}
+
 export default function SessionRequests() {
   const router = useRouter();
   const { selectedOrganization, isLoading: isOrgLoading } = useOrganization();
   const organizationId = selectedOrganization?.id;
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchSessions = async () => {
-    try {
-      if (!organizationId) return;
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/requests?organizationId=${organizationId}`,
-        { withCredentials: true }
-      );
-      setSessions(response.data);
-    } catch (error) {
-      console.error("Failed to fetch sessions:", error);
-      toast.error("Failed to load session requests");
+  const {
+    data: sessions,
+    // error,
+    isLoading,
+    mutate,
+  } = useSWR(
+    organizationId
+      ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/coach/sessions/requests?organizationId=${organizationId}`
+      : null,
+    fetchSessions,
+    {
+      revalidateOnFocus: false,
     }
-  };
-
-  useEffect(() => {
-    fetchSessions();
-  });
+  );
 
   const handleViewDetails = (sessionId: string) => {
     router.push(`/coach/sessionRequest/${sessionId}`);
@@ -95,7 +96,7 @@ export default function SessionRequests() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sessions.map((session) => (
+              {sessions?.map((session) => (
                 <TableRow key={session._id}>
                   <TableCell>{session.title}</TableCell>
                   <TableCell>

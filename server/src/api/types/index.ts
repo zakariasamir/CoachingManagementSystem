@@ -37,6 +37,7 @@ export interface ISession extends BaseDocument {
   isAccepted: boolean;
   status: "requested" | "scheduled" | "completed" | "cancelled" | "declined";
   notes?: string;
+  createdAt: Date;
 }
 
 export interface ISessionParticipant extends BaseDocument {
@@ -83,6 +84,9 @@ export interface IInvoice extends BaseDocument {
   invoiceNumber: string;
   issuedTo: Types.ObjectId | IUser;
   organizationId: Types.ObjectId | IOrganization;
+  amount: number;
+  currency: string;
+  dueDate: Date;
   status: "sent" | "viewed" | "paid";
   issuedAt: Date;
 }
@@ -130,4 +134,59 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
     limit: number;
     pages: number;
   };
+}
+
+// Dashboard statistics types
+export interface SessionStats {
+  total: number;
+  completed: number;
+  upcoming: number;
+}
+
+export interface GoalStats {
+  total: number;
+  completed: number;
+  inProgress: number;
+}
+
+export interface ParticipantStats {
+  total: number;
+  coaches: number;
+  entrepreneurs: number;
+}
+
+export interface MonthData {
+  month: string;
+  sessions: SessionStats;
+  goals: GoalStats;
+  participants: ParticipantStats;
+}
+
+export interface TotalStats {
+  sessions: SessionStats;
+  goals: GoalStats;
+  participants: ParticipantStats;
+  revenue: number;
+}
+
+export interface GrowthStats {
+  sessions: string;
+  goals: string;
+  participants: string;
+}
+
+export interface DashboardStats {
+  monthlyData: MonthData[];
+  totals: TotalStats;
+  growth: GrowthStats;
+}
+
+export interface SessionWithId {
+  _id: Types.ObjectId;
+  status: string;
+  createdAt: Date;
+}
+
+export interface OrgSession {
+  sessionId: SessionWithId;
 }

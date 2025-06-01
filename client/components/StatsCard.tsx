@@ -40,7 +40,7 @@ export function StatsCard({ title, value, icon }: StatsCardProps) {
   return (
     <Card
       className={cn(
-        "flex items-center bg-gradient-to-br p-6 gap-4 shadow-sm hover:shadow-md transition",
+        "flex items-center bg-gradient-to-br p-6 gap-4 hover:shadow-md transition shadow-lg",
         getCardStyles()
       )}
     >

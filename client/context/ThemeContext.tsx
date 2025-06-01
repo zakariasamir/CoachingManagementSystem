@@ -1,4 +1,3 @@
-// src/context/ThemeContext.tsx
 import {
   createContext,
   useContext,
@@ -6,6 +5,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { MantineProvider } from "@mantine/core";
 
 interface ThemeContextType {
   theme: "light" | "dark";
@@ -15,11 +15,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({} as ThemeContextType);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  if (typeof window === "undefined") {
-    return <>{children}</>;
-  }
   const [theme, setTheme] = useState<"light" | "dark">(() => {
-    // Get initial theme from localStorage or default to 'light'
+    if (typeof window === "undefined") return "light";
     const savedTheme = localStorage.getItem("theme");
     return savedTheme === "dark" || savedTheme === "light"
       ? savedTheme
@@ -27,7 +24,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    // Update localStorage and document class when theme changes
     localStorage.setItem("theme", theme);
 
     if (theme === "dark") {
@@ -38,15 +34,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      const newTheme = prevTheme === "light" ? "dark" : "light";
-      return newTheme;
-    });
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
+      <MantineProvider forceColorScheme={theme}>{children}</MantineProvider>
     </ThemeContext.Provider>
   );
 };

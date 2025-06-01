@@ -95,8 +95,7 @@ function UpdateProgressDialog({
       <DialogHeader>
         <DialogTitle>Update Goal Progress</DialogTitle>
         <DialogDescription>
-          Update progress for {goal.entrepreneurId.firstName}{" "}
-          {goal.entrepreneurId.lastName}&apos;s goal
+          Update progress for {goal.title}&apos;s goal
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-6 pt-4">

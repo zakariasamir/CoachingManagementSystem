@@ -15,6 +15,8 @@ import {
   updateUserStatus,
   addUserToOrganization,
   getSessionById,
+  listInvoices,
+  processInvoice,
 } from "../controllers/manager.controller";
 import { Router, RequestHandler } from "express";
 import authenticate from "../middlewares/auth.middleware";
@@ -34,7 +36,11 @@ const auth = [
 const router = Router();
 
 // Dashboard stats
-router.get("/dashboard/:organizationId", auth, getDashboardStats as RequestHandler);
+router.get(
+  "/dashboard/:organizationId",
+  auth,
+  getDashboardStats as RequestHandler
+);
 // List organizations
 router.get("/organizations", auth, listOrganizations as RequestHandler);
 // List all organizations
@@ -100,5 +106,9 @@ router.put(
   userValidation.updateUser as RequestHandler,
   updateUser as RequestHandler
 );
+// List invoices
+router.get("/invoices", auth, listInvoices as RequestHandler);
+// Process invoice
+router.patch("/invoices/:invoiceId/process", auth, processInvoice as RequestHandler);
 
 export default router;

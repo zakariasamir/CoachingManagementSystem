@@ -5,7 +5,11 @@ import { Session } from "../models/session.model";
 import { SessionOrganization } from "../models/sessionOrganization.model";
 import { Organization } from "../models/organization.model";
 import { OrganizationUser } from "../models/organizationUser.model";
-import { AuthenticatedRequest, IOrganization } from "../types/index";
+import {
+  AuthenticatedRequest,
+  IOrganization,
+  SessionWithId,
+} from "../types/index";
 
 const getDashboardStats = async (
   req: Request,
@@ -15,38 +19,95 @@ const getDashboardStats = async (
   const { userId } = (req as AuthenticatedRequest).user!;
 
   try {
-    const entrepreneurSessions = await SessionParticipant.find({
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 5);
+    startDate.setDate(1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Get entrepreneur's sessions
+    const sessionParticipants = await SessionParticipant.find({
       userId,
       role: "entrepreneur",
     });
-    const sessionIds = entrepreneurSessions.map((cs) => cs.sessionId);
+    const sessionIds = sessionParticipants.map((sp) => sp.sessionId);
 
     const orgSessions = await SessionOrganization.find({
       organizationId,
       sessionId: { $in: sessionIds },
+    }).populate<{ sessionId: SessionWithId }>({
+      path: "sessionId",
+      model: "Session",
+      match: { createdAt: { $gte: startDate } },
+      select: "title status startTime endTime createdAt",
     });
-    const orgSessionIds = orgSessions.map((os) => os.sessionId);
 
-    const totalSessions = await Session.countDocuments({
-      _id: { $in: orgSessionIds },
-    });
-
-    const entrepreneurGoals = await Goal.find({
-      entrepreneurId: userId,
+    const goals = await Goal.find({
       organizationId,
+      sessionId: { $in: sessionIds },
+      createdAt: { $gte: startDate },
     });
 
-    const completedGoals = entrepreneurGoals.filter(
-      (goal) => goal.status === "completed"
-    ).length;
+    // Calculate monthly data
+    const monthlyData = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const month = date.toLocaleString("default", { month: "long" });
 
-    const totalGoals = entrepreneurGoals.length;
+      const monthSessions = orgSessions.filter((os) => {
+        const sessionDate = new Date(os.sessionId.createdAt);
+        return (
+          sessionDate.getMonth() === date.getMonth() &&
+          sessionDate.getFullYear() === date.getFullYear()
+        );
+      });
+
+      const monthGoals = goals.filter((g) => {
+        const goalDate = new Date(g.createdAt);
+        return (
+          goalDate.getMonth() === date.getMonth() &&
+          goalDate.getFullYear() === date.getFullYear()
+        );
+      });
+
+      return {
+        month,
+        sessions: {
+          total: monthSessions.length,
+          completed: monthSessions.filter(
+            (s) => s.sessionId.status === "completed"
+          ).length,
+          upcoming: monthSessions.filter(
+            (s) => s.sessionId.status === "scheduled"
+          ).length,
+        },
+        goals: {
+          total: monthGoals.length,
+          completed: monthGoals.filter((g) => g.status === "completed").length,
+          inProgress: monthGoals.filter((g) => g.status === "in-progress")
+            .length,
+        },
+      };
+    }).reverse();
+
+    // Calculate totals
+    const totals = {
+      sessions: {
+        total: orgSessions.length,
+        completed: orgSessions.filter((s) => s.sessionId.status === "completed")
+          .length,
+        upcoming: orgSessions.filter((s) => s.sessionId.status === "scheduled")
+          .length,
+      },
+      goals: {
+        total: goals.length,
+        completed: goals.filter((g) => g.status === "completed").length,
+        inProgress: goals.filter((g) => g.status === "in-progress").length,
+      },
+    };
 
     res.status(200).json({
-      totalSessions,
-      completedGoals,
-      totalGoals,
-      activeGoals: totalGoals - completedGoals,
+      monthlyData,
+      totals,
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
