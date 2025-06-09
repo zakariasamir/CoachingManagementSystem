@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { AddUserToOrgForm } from "@/components/forms/AddUserToOrgForm";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface User {
   _id: string;
@@ -49,6 +50,7 @@ export default function Users() {
   const {
     data: users,
     error,
+    isLoading,
     mutate,
   } = useSWR(
     organizationId
@@ -82,7 +84,7 @@ export default function Users() {
       .includes(searchTerm.toLowerCase())
   );
 
-  // if (error) return <div className="p-6">Failed to load users</div>;
+  if (error) return <div className="p-6">Failed to load users</div>;
 
   return (
     <ManagerLayout>
@@ -110,7 +112,7 @@ export default function Users() {
           </div>
         </div>
 
-        {!users ? (
+        {!users || isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
@@ -163,7 +165,8 @@ export default function Users() {
                             <SelectItem value="inactive">Inactive</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button className="h-9"
+                        <Button
+                          className="h-9"
                           size="sm"
                           variant="outline"
                           onClick={() => {

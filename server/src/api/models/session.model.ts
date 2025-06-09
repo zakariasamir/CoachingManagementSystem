@@ -9,7 +9,7 @@ const sessionSchema = new Schema<ISession>({
   isAccepted: { type: Boolean, default: false },
   status: {
     type: String,
-    enum: ["requested", "declined", "scheduled", "completed", "cancelled"],
+    enum: ["requested", "declined", "scheduled", "completed"],
     default: "requested",
   },
   notes: { type: String },

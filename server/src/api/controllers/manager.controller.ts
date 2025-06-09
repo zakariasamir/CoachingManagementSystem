@@ -744,6 +744,51 @@ const processInvoice = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const getCoachAvailability = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { coachId } = req.params;
+
+  try {
+    if (!coachId) {
+      res.status(400).json({ message: "Missing coachId parameter" });
+      return;
+    }
+
+    // Find all sessions where this coach is a participant
+    const coachSessions = await SessionParticipant.find({
+      userId: coachId,
+      role: "coach",
+    }).select("sessionId");
+
+    const sessionIds = coachSessions.map((cs) => cs.sessionId);
+
+    // Get the actual sessions with time details that are scheduled or requested
+    const sessions = await Session.find({
+      _id: { $in: sessionIds },
+      status: { $in: ["scheduled", "requested"] },
+    })
+      .select("startTime endTime status")
+      .lean();
+
+    // Format the sessions into time slots
+    const busySlots = sessions.map((session) => ({
+      start: session.startTime,
+      end: session.endTime,
+      status: session.status,
+    }));
+
+    res.status(200).json(busySlots);
+  } catch (error) {
+    console.error("Error in getCoachAvailability:", error);
+    res.status(500).json({
+      message: "Error fetching coach availability",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 export {
   getDashboardStats,
   listOrganizations,
@@ -762,4 +807,5 @@ export {
   getSessionById,
   listInvoices,
   processInvoice,
+  getCoachAvailability,
 };

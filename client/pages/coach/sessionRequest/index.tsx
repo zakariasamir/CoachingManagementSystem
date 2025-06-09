@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useOrganization } from "@/hooks/useOrganization";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface User {
   _id: string;
@@ -52,7 +53,7 @@ export default function SessionRequests() {
 
   const {
     data: sessions,
-    // error,
+    error,
     isLoading,
     mutate,
   } = useSWR(
@@ -95,61 +96,69 @@ export default function SessionRequests() {
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {sessions?.map((session) => (
-                <TableRow key={session._id}>
-                  <TableCell>{session.title}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {session.entrepreneurs.length > 0 ? (
-                        session.entrepreneurs.map((entrepreneur) => (
-                          <div key={entrepreneur._id}>
-                            {`${entrepreneur.firstName} ${entrepreneur.lastName}`}
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No entrepreneurs
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(session.startTime), "MMM dd, yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    {`${format(
-                      new Date(session.startTime),
-                      "HH:mm"
-                    )} - ${format(new Date(session.endTime), "HH:mm")}`}
-                  </TableCell>
-                  <TableCell>{session.price} MAD</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        session.status === "requested"
-                          ? "destructive"
-                          : session.status === "scheduled"
-                          ? "outline"
-                          : "default"
-                      }
-                      className="capitalize"
-                    >
-                      {session.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDetails(session._id)}
-                    >
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+            {!sessions || isLoading ? (
+              <>
+                <Skeleton className="h-[200px]" />
+                <Skeleton className="h-[200px] hidden md:block" />
+                <Skeleton className="h-[200px] hidden lg:block" />
+              </>
+            ) : (
+              <TableBody>
+                {sessions?.map((session) => (
+                  <TableRow key={session._id}>
+                    <TableCell>{session.title}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {session.entrepreneurs.length > 0 ? (
+                          session.entrepreneurs.map((entrepreneur) => (
+                            <div key={entrepreneur._id}>
+                              {`${entrepreneur.firstName} ${entrepreneur.lastName}`}
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            No entrepreneurs
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(session.startTime), "MMM dd, yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      {`${format(
+                        new Date(session.startTime),
+                        "HH:mm"
+                      )} - ${format(new Date(session.endTime), "HH:mm")}`}
+                    </TableCell>
+                    <TableCell>{session.price} MAD</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          session.status === "requested"
+                            ? "destructive"
+                            : session.status === "scheduled"
+                            ? "outline"
+                            : "default"
+                        }
+                        className="capitalize"
+                      >
+                        {session.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(session._id)}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            )}
           </Table>
         </div>
       </div>

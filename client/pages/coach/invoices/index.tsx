@@ -6,11 +6,6 @@ import axios from "axios";
 import CoachLayout from "@/layouts/CoachLayouts";
 import InvoiceList from "@/components/InvoiceList";
 
-// Fetcher function for SWR
-async function fetchInvoices(url: string) {
-  const response = await axios.get<Invoice[]>(url, { withCredentials: true });
-  return response.data;
-}
 
 export const metadata: Metadata = {
   title: "My Invoices | Coach Dashboard",

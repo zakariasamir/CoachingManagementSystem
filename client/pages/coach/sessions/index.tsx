@@ -53,6 +53,7 @@ export default function CoachSessions() {
   const organizationId = selectedOrganization?.id;
   const {
     data: sessions,
+    isLoading,
     error,
     mutate,
   } = useSWR(
@@ -84,18 +85,18 @@ export default function CoachSessions() {
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">Coach Sessions</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {!sessions ? (
+          {!sessions || isLoading ? (
             <>
               <Skeleton className="h-[200px]" />
               <Skeleton className="h-[200px] hidden md:block" />
               <Skeleton className="h-[200px] hidden lg:block" />
             </>
-          ) : sessions.length === 0 ? (
+          ) : sessions?.length === 0 ? (
             <div className="col-span-full text-center text-gray-500">
               No sessions found
             </div>
           ) : (
-            sessions.map((session) => (
+            sessions?.map((session) => (
               <SessionCard
                 key={session._id}
                 session={mapSessionToCardProps(session)}

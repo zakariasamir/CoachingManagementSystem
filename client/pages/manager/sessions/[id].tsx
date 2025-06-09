@@ -6,7 +6,6 @@ import axios from "axios";
 import { format } from "date-fns";
 import ManagerLayout from "@/layouts/ManagerLayout";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +23,7 @@ import Link from "next/link";
 import { useOrganization } from "@/hooks/useOrganization";
 import { ViewGoalSheet } from "@/components/ViewGoalSheet";
 import Image from "next/image";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface User {
   _id: string;
@@ -155,7 +155,6 @@ export default function ManagerSessionDetails() {
   }
 
   const { session, goals } = data;
-  console.log(session.status);
 
   return (
     <ManagerLayout>
@@ -167,12 +166,7 @@ export default function ManagerSessionDetails() {
               Back to Sessions
             </Button>
           </Link>
-          <Badge
-            variant={session.status === "scheduled" ? "outline" : "default"}
-            className="text-sm"
-          >
-            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-          </Badge>
+          <StatusBadge status={session.status} className="text-sm" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

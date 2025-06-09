@@ -4,7 +4,7 @@ export interface SessionFormData {
   endTime: string;
   coachId: string;
   entrepreneurIds: string[];
-  notes?: string;
+  notes: string;
   price: number;
 }
 

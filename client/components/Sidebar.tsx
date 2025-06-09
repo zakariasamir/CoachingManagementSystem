@@ -46,7 +46,6 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Handle authentication check
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       router.push("/auth/login");
@@ -66,11 +65,6 @@ const Sidebar = () => {
             path: "/manager/sessions",
             icon: <Calendar className="h-5 w-5" />,
           },
-          // {
-          //   name: "Payments",
-          //   path: "/manager/payments",
-          //   icon: <CreditCard className="h-5 w-5" />,
-          // },
           {
             name: "Users",
             path: "/manager/users",
@@ -125,17 +119,14 @@ const Sidebar = () => {
 
   const handleOrganizationChange = async (orgId: string) => {
     try {
-      // Find the organization we're switching to before making the API call
       const targetOrg = organizations.find((org) => org.id === orgId);
       if (!targetOrg) {
         console.error("Organization not found");
         return;
       }
 
-      // Switch organization
       await switchOrganization(orgId);
 
-      // Use the target organization's role for navigation
       const newPath = `/${targetOrg.role}/dashboard`;
       router.push(newPath);
     } catch (error) {
@@ -149,7 +140,6 @@ const Sidebar = () => {
     return () => document.removeEventListener("toggle-sidebar", handler);
   }, []);
 
-  // Early return with loading state for both auth and org loading
   if (isAuthLoading || isOrgLoading) {
     return (
       <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-background">
@@ -161,12 +151,10 @@ const Sidebar = () => {
     );
   }
 
-  // Early return if not authenticated
   if (!isAuthenticated) {
     return null;
   }
 
-  // Early return with error state
   if (orgError) {
     return (
       <div className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-background">
@@ -203,9 +191,7 @@ const Sidebar = () => {
               </Button>
             </div>
 
-            {/* Organization Switcher */}
             <div className="space-y-2">
-              {/* <label className="text-sm font-medium">Organization</label> */}
               <Select
                 value={selectedOrganization?.id}
                 onValueChange={handleOrganizationChange}
@@ -239,7 +225,6 @@ const Sidebar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 <Button
-                  // as="div"
                   variant={pathname === item.path ? "secondary" : "ghost"}
                   className="w-full justify-start gap-2"
                 >

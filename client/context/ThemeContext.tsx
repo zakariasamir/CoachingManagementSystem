@@ -6,6 +6,10 @@ import {
   ReactNode,
 } from "react";
 import { MantineProvider } from "@mantine/core";
+import {
+  ThemeProvider as MuiThemeProvider,
+  createTheme,
+} from "@mui/material/styles";
 
 interface ThemeContextType {
   theme: "light" | "dark";
@@ -37,9 +41,34 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
+  const muiTheme = createTheme({
+    palette: {
+      mode: theme,
+      primary: {
+        main: "hsl(var(--primary))",
+      },
+    },
+    components: {
+      MuiOutlinedInput: {
+        styleOverrides: {
+          root: {
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "var(--border)",
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "hsl(var(--primary))",
+            },
+          },
+        },
+      },
+    },
+  });
+
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <MantineProvider forceColorScheme={theme}>{children}</MantineProvider>
+      <MuiThemeProvider theme={muiTheme}>
+        <MantineProvider forceColorScheme={theme}>{children}</MantineProvider>
+      </MuiThemeProvider>
     </ThemeContext.Provider>
   );
 };

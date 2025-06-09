@@ -17,6 +17,7 @@ import {
   getSessionById,
   listInvoices,
   processInvoice,
+  getCoachAvailability,
 } from "../controllers/manager.controller";
 import { Router, RequestHandler } from "express";
 import authenticate from "../middlewares/auth.middleware";
@@ -34,6 +35,13 @@ const auth = [
   authorize("manager", "admin") as RequestHandler,
 ];
 const router = Router();
+
+// Get coach availability
+router.get(
+  "/coach/:coachId/availability",
+  auth,
+  getCoachAvailability as RequestHandler
+);
 
 // Dashboard stats
 router.get(
@@ -60,13 +68,6 @@ router.post(
   sessionValidation.createSession as RequestHandler,
   createSession as RequestHandler
 );
-// Create goal
-// router.post(
-//   "/goals",
-//   auth,
-//   goalValidation.createGoal as RequestHandler,
-//   createGoal as RequestHandler
-// );
 // List payments
 router.get("/payments", auth, listPayments as RequestHandler);
 // Generate invoice
@@ -109,6 +110,10 @@ router.put(
 // List invoices
 router.get("/invoices", auth, listInvoices as RequestHandler);
 // Process invoice
-router.patch("/invoices/:invoiceId/process", auth, processInvoice as RequestHandler);
+router.patch(
+  "/invoices/:invoiceId/process",
+  auth,
+  processInvoice as RequestHandler
+);
 
 export default router;

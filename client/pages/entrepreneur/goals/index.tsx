@@ -39,7 +39,6 @@ async function fetchGoals(url: string) {
 }
 
 export default function EntrepreneurGoals() {
-  // const { data } = useAuth();
   const { selectedOrganization } = useOrganization();
   const organizationId = selectedOrganization?.id;
   const { data: goals, error } = useSWR(

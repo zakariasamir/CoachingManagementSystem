@@ -26,7 +26,6 @@ const getDashboardStats = async (
     startDate.setDate(1);
     startDate.setHours(0, 0, 0, 0);
 
-    // Get coach's sessions
     const sessionParticipants = await SessionParticipant.find({
       userId,
       role: "coach",
@@ -49,13 +48,15 @@ const getDashboardStats = async (
       createdAt: { $gte: startDate },
     });
 
+    const validOrgSessions = orgSessions.filter((os) => os.sessionId != null);
+
     const monthlyData = Array.from({ length: 6 }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       const month = date.toLocaleString("default", { month: "long" });
 
-      const monthSessions = orgSessions.filter((os) => {
-        const sessionDate = new Date(os.sessionId.createdAt);
+      const monthSessions = validOrgSessions.filter((os) => {
+        const sessionDate = new Date(os.sessionId.createdAt || 0);
         return (
           sessionDate.getMonth() === date.getMonth() &&
           sessionDate.getFullYear() === date.getFullYear()
@@ -92,11 +93,13 @@ const getDashboardStats = async (
 
     const totals = {
       sessions: {
-        total: orgSessions.length,
-        completed: orgSessions.filter((s) => s.sessionId.status === "completed")
-          .length,
-        upcoming: orgSessions.filter((s) => s.sessionId.status === "scheduled")
-          .length,
+        total: validOrgSessions.length,
+        completed: validOrgSessions.filter(
+          (s) => s.sessionId.status === "completed"
+        ).length,
+        upcoming: validOrgSessions.filter(
+          (s) => s.sessionId.status === "scheduled"
+        ).length,
       },
       goals: {
         total: goals.length,

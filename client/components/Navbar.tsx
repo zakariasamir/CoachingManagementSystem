@@ -68,7 +68,7 @@ const Navbar = () => {
         <Button
           variant="ghost"
           className="lg:hidden"
-          onClick={() => document.dispatchEvent(new Event("toggle-sidebar"))} // Consider a more React-centric approach for toggling sidebar if needed
+          onClick={() => document.dispatchEvent(new Event("toggle-sidebar"))}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -91,7 +91,6 @@ const Navbar = () => {
           <DropdownMenuTrigger asChild disabled={isMutating}>
             <Avatar className="h-9 w-9 cursor-pointer">
               <AvatarImage
-                // src={user.avatar || "/placeholder-user.jpg"}
                 alt={`${firstName} ${lastName}`}
               />
               <AvatarFallback>

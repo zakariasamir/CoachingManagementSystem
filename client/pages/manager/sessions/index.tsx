@@ -11,24 +11,6 @@ import SessionForm from "@/components/forms/SessionForm";
 import { toast } from "sonner";
 import { SessionFormData, SessionCardProps, Session } from "@/types/session";
 
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-interface Participant {
-  _id: string;
-  sessionId: string;
-  userId: User;
-  role: "coach" | "entrepreneur";
-  joinedAt: string;
-  // user: User;
-}
-
-
-// Update the mapping logic with better type safety
 const mapSessionToCardProps = (session: Session): SessionCardProps => {
   const coachParticipant = session.participants.find((p) => p.role === "coach");
   const entrepreneurs = session.participants.filter(
@@ -43,7 +25,6 @@ const mapSessionToCardProps = (session: Session): SessionCardProps => {
     status: session.status as
       | "scheduled"
       | "completed"
-      | "cancelled"
       | "requested"
       | "declined",
     price: session.price || 0,
@@ -63,13 +44,15 @@ async function fetchSessions(url: string) {
 
 const Sessions = () => {
   const [isSessionFormOpen, setSessionFormOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const { user } = useAuth();
   const { selectedOrganization } = useOrganization();
   const organizationId = selectedOrganization?.id;
 
   const {
     data: sessions,
-    // error,
+    isLoading,
+    error,
     mutate,
   } = useSWR(
     organizationId
@@ -82,6 +65,7 @@ const Sessions = () => {
   );
 
   const handleAddSession = async (sessionData: SessionFormData) => {
+    setIsCreating(true);
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/manager/sessions`,
@@ -95,6 +79,8 @@ const Sessions = () => {
     } catch (error) {
       toast.error("Failed to create session");
       console.error("Error creating session:", error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -113,10 +99,11 @@ const Sessions = () => {
           onClose={() => setSessionFormOpen(false)}
           onSubmit={handleAddSession}
           organizationId={organizationId || ""}
+          isCreating={isCreating}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {!sessions ? (
+          {!sessions || isLoading ? (
             <>
               <Skeleton className="h-[200px]" />
               <Skeleton className="h-[200px] hidden md:block" />

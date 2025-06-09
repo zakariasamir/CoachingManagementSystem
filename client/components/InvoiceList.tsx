@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface InvoiceListProps {
   role: "manager" | "coach";
@@ -148,15 +148,16 @@ export default function InvoiceList({ role }: InvoiceListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {!invoices || isLoading ? (
               <TableRow>
                 <TableCell
                   colSpan={role === "manager" ? 7 : 6}
                   className="text-center py-4"
                 >
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    <span className="ml-2">Loading invoices...</span>
+                  <div className="space-y-3">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
                   </div>
                 </TableCell>
               </TableRow>

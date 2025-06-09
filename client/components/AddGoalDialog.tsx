@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-// Props definition for the AddGoalDialog component
 interface AddGoalDialogProps {
   coachId: string;
   organizationId: string;
@@ -27,12 +26,6 @@ interface AddGoalDialogProps {
   trigger?: React.ReactNode;
 }
 
-/**
- * AddGoalDialog Component
- *
- * A dialog component for adding new goals to a coaching session.
- * Provides a form with title and description fields.
- */
 export function AddGoalDialog({
   coachId,
   organizationId,
@@ -46,7 +39,6 @@ export function AddGoalDialog({
     description: "",
   });
 
-  // Handle form submission and goal creation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {

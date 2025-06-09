@@ -140,9 +140,10 @@ const Login = () => {
               )}
               disabled={isMutating}
             >
-              {isMutating && isOrgLoading && (
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              {isMutating ||
+                (isOrgLoading && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                ))}
               Sign In
             </Button>
 

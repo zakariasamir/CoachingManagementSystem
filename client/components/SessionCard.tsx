@@ -36,7 +36,6 @@ export function SessionCard({ session, onStatusChange }: SessionCardProps) {
     }
   };
 
-  // Determine the link path based on whether onStatusChange is provided
   const linkPath = `/${selectedOrganization?.role}/sessions/${session.id}`;
 
   return (
