@@ -81,6 +81,7 @@ export interface IPayment extends BaseDocument {
 
 export interface IInvoice extends BaseDocument {
   paymentId: Types.ObjectId | IPayment;
+  sessionId: Types.ObjectId | ISession;
   invoiceNumber: string;
   issuedTo: Types.ObjectId | IUser;
   organizationId: Types.ObjectId | IOrganization;

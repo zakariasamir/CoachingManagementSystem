@@ -6,6 +6,10 @@ const invoiceSchema = new Schema<IInvoice>(
     paymentId: {
       type: Schema.Types.ObjectId,
       ref: "Payment",
+    },
+    sessionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Session",
       required: true,
     },
     invoiceNumber: {

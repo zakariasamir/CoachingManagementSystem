@@ -182,10 +182,54 @@ const updateSession = async (req: Request, res: Response): Promise<void> => {
       { status },
       { new: true }
     );
-    if (!session) {
+
+    const sessionOrganization = await SessionOrganization.findOne({
+      sessionId,
+    });
+
+    if (!session || !sessionOrganization) {
       res.status(404).json({ message: "Session not found" });
       return;
     }
+
+    if (status === "completed") {
+      const coachParticipant = await SessionParticipant.findOne({
+        sessionId,
+        role: "coach",
+      });
+
+      if (coachParticipant) {
+        // Create payment first with pending status
+        const payment = await Payment.create({
+          coachId: coachParticipant.userId,
+          sessionIds: [session._id],
+          organizationId: sessionOrganization.organizationId,
+          amount: session.price || 0,
+          status: "pending",
+          issuedAt: new Date(),
+          paidAt: null,
+        });
+
+        // Create invoice linked to the pending payment
+        const newInvoice = new Invoice({
+          sessionId: session._id,
+          organizationId: sessionOrganization.organizationId,
+          paymentId: payment._id, // Link to payment
+          issuedTo: coachParticipant.userId,
+          amount: session.price || 0,
+          status: "sent",
+          createdAt: new Date(),
+          issuedAt: new Date(),
+          invoiceNumber: `INV-${Date.now()}-${coachParticipant.userId
+            .toString()
+            .slice(-4)}`,
+          currency: "MAD",
+        });
+
+        await newInvoice.save();
+      }
+    }
+
     res.status(200).json(session);
   } catch (error) {
     console.error("Error in updateSession:", error);
@@ -567,7 +611,7 @@ const listInvoices = async (req: Request, res: Response): Promise<void> => {
 
   try {
     const query: any = {
-      coachId: userId,
+      issuedTo: userId,
     };
 
     if (status) {
@@ -582,14 +626,17 @@ const listInvoices = async (req: Request, res: Response): Promise<void> => {
     }
 
     const invoices = await Invoice.find(query)
-      .populate("sessionId", "title startTime endTime")
+      .populate({
+        path: "paymentId",
+        populate: {
+          path: "sessionIds",
+          select: "title startTime endTime",
+        },
+      })
       .populate("organizationId", "name")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      message: "Invoices retrieved successfully",
-      data: invoices,
-    });
+    res.status(200).json(invoices);
   } catch (error) {
     console.error("Error in listInvoices:", error);
     res.status(500).json({
@@ -622,8 +669,8 @@ const processInvoice = async (req: Request, res: Response): Promise<void> => {
     // Create payment record first
     const payment = await Payment.create({
       coachId: userId,
+      sessionIds: [invoice.sessionId],
       organizationId: invoice.organizationId,
-      // sessionIds: [invoice.sessionId],
       amount: invoice.amount,
       status: "paid",
       issuedAt: new Date(),

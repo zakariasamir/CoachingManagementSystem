@@ -54,4 +54,4 @@ export interface Invoice {
   dueDate: string;
 }
 
-export type InvoiceStatus = Invoice['status'] | 'all';
+export type InvoiceStatus = Invoice["status"] | "all";

@@ -84,18 +84,40 @@ export default function InvoiceList({ role }: InvoiceListProps) {
     status: Extract<Invoice["status"], "viewed" | "paid">
   ) => {
     try {
+      await mutate(
+        (currentInvoices: Invoice[] | undefined) =>
+          currentInvoices?.map((invoice) =>
+            invoice._id === invoiceId
+              ? {
+                  ...invoice,
+                  status,
+                  ...(status === "paid" && {
+                    paymentId: {
+                      ...invoice.paymentId,
+                      paidAt: new Date().toISOString(),
+                    },
+                  }),
+                }
+              : invoice
+          ),
+        false
+      );
+
       await axios.patch(
         `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/manager/invoices/${invoiceId}/process`,
         { status, organizationId },
         { withCredentials: true }
       );
+
       await mutate();
+
       toast.success(
         `Invoice ${
           status === "paid" ? "marked as paid" : "viewed"
         } successfully`
       );
     } catch (error) {
+      await mutate();
       toast.error("Failed to process invoice");
     }
   };
