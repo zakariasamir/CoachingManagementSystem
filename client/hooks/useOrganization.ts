@@ -2,6 +2,7 @@ import { useAuth } from "./useAuth";
 import { useCallback } from "react";
 import useSWR from "swr";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface Organization {
   id: string;
@@ -22,6 +23,7 @@ const fetcher = async (url: string) => {
 
 export function useOrganization() {
   const { user, mutate: mutateAuth } = useAuth();
+  const router = useRouter();
 
   const {
     data: organizations,
@@ -32,7 +34,23 @@ export function useOrganization() {
     user
       ? `${process.env.NEXT_PUBLIC_VITE_BASE_URL}/${user.organizations.role}/organizations`
       : null,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      revalidateOnMount: true,
+      onError: (err) => {
+        if (err.response?.status === 401) {
+          console.log("Token expired, redirecting to login");
+          router.push("/auth/login");
+        } else {
+          console.error(
+            "An unexpected error occurred while fetching organizations:",
+            err
+          );
+        }
+      },
+    }
   );
 
   const switchOrganization = useCallback(
