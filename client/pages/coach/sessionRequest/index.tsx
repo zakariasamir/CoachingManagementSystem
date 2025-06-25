@@ -72,9 +72,15 @@ export default function SessionRequests() {
 
   if (isLoading || isOrgLoading || !selectedOrganization) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
+      <CoachLayout>
+        <div className="flex items-center justify-center p-4">
+          <>
+            <Skeleton className="h-[200px]" />
+            <Skeleton className="h-[200px] hidden md:block" />
+            <Skeleton className="h-[200px] hidden lg:block" />
+          </>
+        </div>
+      </CoachLayout>
     );
   }
 

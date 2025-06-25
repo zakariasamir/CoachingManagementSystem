@@ -34,7 +34,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions: CorsOptions = {
-  origin: ["http://localhost:3000", process.env.FRONTEND_URL].filter(
+  origin: ["http://localhost:3001", process.env.FRONTEND_URL].filter(
     Boolean
   ) as string[],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
